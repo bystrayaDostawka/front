@@ -92,7 +92,7 @@ export default {
             this.loading = true;
             this.error = null;
             try {
-                const res = await api.get('/users?with[]=bank'); 
+                const res = await api.get('/users?with[]=bank');
                 this.users = res.data;
             } catch (e) {
                 this.error = 'Ошибка загрузки пользователей';
@@ -101,7 +101,6 @@ export default {
             }
         },
         editUser(user) {
-            // Здесь откроется модалка/форма редактирования
             alert('Открыть форму редактирования пользователя (реализуй по своему усмотрению)');
         },
         async deleteUser(user) {

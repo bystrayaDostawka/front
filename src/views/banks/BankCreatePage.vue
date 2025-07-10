@@ -78,7 +78,6 @@ export default {
           this.phone = val.phone || "";
           this.email = val.email || "";
         }
-        // После актуализации полей сохраняем состояние
         this.$nextTick(() => {
           this.initialState = this._getFormState();
         });

@@ -1,6 +1,5 @@
 <template>
     <div class="flex flex-col h-full overflow-hidden">
-        <!-- Контент формы -->
         <div class="flex-1 overflow-auto p-4">
             <h2 class="text-lg font-bold mb-4">{{ editingItem ? 'Редактировать пользователя' : 'Создать пользователя' }}
             </h2>
@@ -106,7 +105,6 @@ export default {
                     this.password = '';
                     this.is_active = val.is_active ?? true;
                 }
-                // <--- вот тут обновляем initialState после заполнения полей
                 this.$nextTick(() => {
                     this.initialState = this._getFormState();
                 });

@@ -15,7 +15,6 @@
         </div>
     </transition>
 
-    <!-- Модалка создания/редактирования -->
     <AppModal :show="modalDialog" :onclose="closeModal">
         <UserCreatePage ref="formComponent" @saved="handleSaved" @saved-error="handleSavedError"
             @deleted="handleDeleted" @deleted-error="handleDeletedError" :editingItem="editingItem" />

@@ -8,8 +8,7 @@
         <TableFilterButton :columns="columns" :default-columns="columnsConfig" @update:columns="handleColumnsUpdate" />
       </div>
     </div>
-
-    <!-- Таблица -->
+    
     <table class="min-w-full bg-white shadow-md rounded mb-6 w-full">
       <thead>
         <tr class="bg-gray-100">

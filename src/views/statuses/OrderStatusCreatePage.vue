@@ -58,7 +58,6 @@ export default {
                     this.title = val.title || ''
                     this.color = val.color || '#409eff'
                 }
-                // После актуализации полей сохраняем состояние
                 this.$nextTick(() => {
                     this.initialState = this._getFormState()
                 });

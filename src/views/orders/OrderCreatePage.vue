@@ -86,7 +86,6 @@ export default {
     emits: ['saved', 'saved-error', 'deleted', 'deleted-error'],
     mounted() {
         this.loadDictionaries()
-        // Запомнить состояние по умолчанию после первого заполнения
         this.$nextTick(() => { this.initialState = this._getFormState() })
     },
     watch: {
@@ -131,9 +130,7 @@ export default {
                 this.banks = banksRes.data
                 this.couriers = couriersRes.data
                 this.statuses = statusesRes.data
-            } catch {
-                // ignore
-            }
+            } catch { }
         },
         async save() {
             this.saveLoading = true;

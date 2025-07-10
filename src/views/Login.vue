@@ -47,7 +47,6 @@ export default {
                     password: this.password,
                 });
                 localStorage.setItem('token', res.data.token);
-                // Можно сохранить пользователя для Header, если нужно:
                 localStorage.setItem('user', JSON.stringify(res.data.user));
                 this.$router.push('/');
             } catch (e) {

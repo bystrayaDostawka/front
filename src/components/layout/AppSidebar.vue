@@ -45,7 +45,6 @@ export default { name: "AppSidebar" }
 .app-sidebar {
   position: fixed;
   top: 56px;
-  /* высота header */
   left: 0;
   width: 200px;
   height: calc(100% - 56px);
@@ -70,7 +69,8 @@ nav a {
   padding: 8px 18px;
   display: block;
   border-radius: 4px;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 14px;
 }
 
 nav a.router-link-exact-active {
