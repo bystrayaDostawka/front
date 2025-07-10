@@ -151,11 +151,14 @@ export default {
       const saved = localStorage.getItem(`tableColumns_${this.tableKey}`);
       if (saved) {
         const savedColumns = JSON.parse(saved);
-        this.columns = savedColumns.map((col, idx) => ({
-          ...(this.columnsConfig.find((x) => x.name === col.name) || {}),
-          ...col,
-          sort_index: idx,
-        }));
+        this.columns = savedColumns.map((savedCol) => {
+          const original = this.columnsConfig.find(c => c.name === savedCol.name) || {};
+          return {
+            ...savedCol,
+            component: original.component,
+            props: original.props,
+          };
+        });
       } else {
         this.columns = this.columnsConfig.map((col, idx) => ({
           ...col,
@@ -225,9 +228,17 @@ export default {
       document.removeEventListener("mouseup", this.stopResize);
     },
     handleColumnsUpdate(newColumns) {
-      this.columns = newColumns;
+      this.columns = newColumns.map((col) => {
+        const original = this.columnsConfig.find(c => c.name === col.name) || {};
+        return {
+          ...col,
+          component: original.component,
+          props: original.props,
+        };
+      });
       this.saveColumns && this.saveColumns();
     },
+
     changePage(page) {
       if (page < 1 || page > this.totalPages) return;
       this.currentPage = page;

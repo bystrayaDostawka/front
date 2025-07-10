@@ -66,7 +66,15 @@ export default {
             this.isOpen = !this.isOpen;
         },
         emitUpdate() {
-            this.$emit('update:columns', JSON.parse(JSON.stringify(this.localColumns)));
+            const referenceColumns = this.columns.length ? this.columns : this.defaultColumns;
+            const result = this.localColumns.map(col => {
+                const original = referenceColumns.find(c => c.name === col.name) || {};
+                return {
+                    ...original,
+                    ...col,
+                }
+            });
+            this.$emit('update:columns', result);
         },
         toggleVisible(index, e) {
             if (e.target.classList.contains('handle')) return;
@@ -77,9 +85,7 @@ export default {
             const columns = this.defaultColumns.length
                 ? JSON.parse(JSON.stringify(this.defaultColumns))
                 : JSON.parse(JSON.stringify(this.columns));
-
             columns.forEach(col => col.visible = true);
-
             this.localColumns = columns;
             this.emitUpdate();
         },
