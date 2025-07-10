@@ -1,17 +1,16 @@
 <template>
   <div>
     <div class="flex items-center justify-end space-x-2 mb-2">
-      <div class=" flex items-center space-x-2">
+      <div class="flex items-center space-x-2">
         <select v-model="pageSize" class="border rounded px-2 py-1">
           <option v-for="opt in [10, 25, 50]" :key="opt" :value="opt">{{ opt }}</option>
         </select>
         <TableFilterButton :columns="columns" :default-columns="columnsConfig" @update:columns="handleColumnsUpdate" />
       </div>
-
     </div>
 
     <!-- Таблица -->
-    <table class="min-w-full bg-white shadow-md rounded mb-6 w-full ">
+    <table class="min-w-full bg-white shadow-md rounded mb-6 w-full">
       <thead>
         <tr class="bg-gray-100">
           <th style="width: 40px" class="py-2 px-4 font-semibold relative text-left border-r border-gray-200">
@@ -102,16 +101,37 @@ export default {
   computed: {
     sortedData() {
       if (!this.sortKey) return this.tableData;
+
+      const sortCol = this.columns.find((c) => c.name === this.sortKey);
+
+      if (sortCol && sortCol.type === 'date') {
+        return [...this.tableData].sort((a, b) => {
+          const va = a[this.sortKey];
+          const vb = b[this.sortKey];
+          if (!va && !vb) return 0;
+          if (!va) return 1 * this.sortOrder;
+          if (!vb) return -1 * this.sortOrder;
+          return (new Date(va) - new Date(vb)) * this.sortOrder;
+        });
+      }
+
+      const vaNum = (a) => parseFloat(this.itemMapper(a, this.sortKey));
+      if (
+        this.tableData.length > 0 &&
+        !isNaN(vaNum(this.tableData[0]))
+      ) {
+        return [...this.tableData].sort((a, b) => {
+          return (vaNum(a) - vaNum(b)) * this.sortOrder;
+        });
+      }
+
       return [...this.tableData].sort((a, b) => {
-        const va = this.itemMapper(a, this.sortKey);
-        const vb = this.itemMapper(b, this.sortKey);
-        if (!isNaN(parseFloat(va)) && !isNaN(parseFloat(vb)))
-          return (parseFloat(va) - parseFloat(vb)) * this.sortOrder;
-        return (
-          (va ?? "").toString().localeCompare((vb ?? "").toString()) * this.sortOrder
-        );
+        const va = this.itemMapper(a, this.sortKey) ?? "";
+        const vb = this.itemMapper(b, this.sortKey) ?? "";
+        return va.toString().localeCompare(vb.toString()) * this.sortOrder;
       });
     },
+
     allSelected() {
       return (
         this.pagedData.length > 0 &&

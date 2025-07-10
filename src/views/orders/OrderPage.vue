@@ -68,7 +68,7 @@ export default {
                 { name: "product", label: "Продукт" },
                 { name: "client_name", label: "Клиент" },
                 { name: "client_phone", label: "Телефон" },
-                { name: "delivery_at", label: "Дата доставки" },
+                { name: "delivery_at", label: "Дата доставки", type: "date" },
                 {
                     name: "status",
                     label: "Статус",
@@ -76,7 +76,7 @@ export default {
                     props: (item) => ({
                         value: item.status?.id ?? item.status_id ?? "",
                         orderId: item.id,
-                        statuses: this.statuses, // теперь this правильный!
+                        statuses: this.statuses,
                         onChanged: async (newId) => await this.fetchOrders(),
                     }),
                 },
@@ -102,6 +102,12 @@ export default {
                             minute: "2-digit",
                         })
                         : "-";
+                case "status":
+                    if (!order.status) return 0;
+                    if (typeof order.status === "object") return order.status.id ?? 0;
+                    if (typeof order.status === "number") return order.status;
+                    if (typeof order.status === "string") return parseInt(order.status, 10) || 0;
+                    return 0;
                 default:
                     return order[col] || "";
             }
