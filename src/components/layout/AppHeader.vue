@@ -9,6 +9,8 @@
 </template>
 
 <script>
+import api from '@/api/api';
+
 export default {
   name: "AppHeader",
   computed: {
@@ -22,7 +24,10 @@ export default {
     }
   },
   methods: {
-    logout() {
+    async logout() {
+      try {
+        await api.post('/logout');
+      } catch {}
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       this.$router.push('/login');

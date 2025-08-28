@@ -8,7 +8,7 @@
         <TableFilterButton :columns="columns" :default-columns="columnsConfig" @update:columns="handleColumnsUpdate" />
       </div>
     </div>
-    
+
     <table class="min-w-full bg-white shadow-md rounded mb-6 w-full">
       <thead>
         <tr class="bg-gray-100">
@@ -73,6 +73,7 @@
 <script>
 import TableFilterButton from "./TableFilterButton.vue";
 import Pagination from "./Pagination.vue";
+import { markRaw } from 'vue';
 export default {
   name: "ResizableTable",
   components: { TableFilterButton, Pagination },
@@ -85,7 +86,7 @@ export default {
   },
   data() {
     return {
-      columns: [],
+      columns: this.columnsConfig.map(col => col.component ? { ...col, component: markRaw(col.component) } : { ...col }),
       selectedIds: [],
       sortKey: null,
       sortOrder: 1,
@@ -154,6 +155,7 @@ export default {
           const original = this.columnsConfig.find(c => c.name === savedCol.name) || {};
           return {
             ...savedCol,
+            html: original.html,
             component: original.component,
             props: original.props,
           };
@@ -231,6 +233,7 @@ export default {
         const original = this.columnsConfig.find(c => c.name === col.name) || {};
         return {
           ...col,
+          html: original.html,
           component: original.component,
           props: original.props,
         };
@@ -281,6 +284,12 @@ export default {
       this.currentPage = 1;
       localStorage.setItem(`tablePageSize_${this.tableKey}`, val);
     },
+    columnsConfig: {
+      handler(newVal) {
+        this.columns = newVal.map(col => col.component ? { ...col, component: markRaw(col.component) } : { ...col });
+      },
+      deep: true,
+    }
   },
 };
 </script>

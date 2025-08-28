@@ -2,31 +2,31 @@
   <aside class="app-sidebar">
     <nav>
       <ul>
-        <li>
+        <li v-if="canSee('admin', 'manager', 'bank')">
           <router-link to="/">
-            <i class="fas fa-home mr-2"></i>
-            Дашборд
-          </router-link>
-        </li>
-        <li>
-          <router-link to="/orders">
             <i class="fas fa-file-alt mr-2"></i>
             Заявки
           </router-link>
         </li>
-        <li>
+        <li v-if="canSee('admin', 'manager')">
+          <router-link to="/dashboard">
+            <i class="fas fa-chart-bar mr-2"></i>
+            Дашборд
+          </router-link>
+        </li>
+        <li v-if="canSee('admin', 'manager')">
           <router-link to="/users">
             <i class="fas fa-users mr-2"></i>
             Пользователи
           </router-link>
         </li>
-        <li>
+        <li v-if="canSee('admin', 'manager')">
           <router-link to="/banks">
             <i class="fas fa-university mr-2"></i>
             Банки
           </router-link>
         </li>
-        <li>
+        <li v-if="canSee('admin', 'manager')">
           <router-link to="/order-statuses">
             <i class="fas fa-flag-checkered mr-2"></i>
             Статусы
@@ -38,7 +38,19 @@
 </template>
 
 <script>
-export default { name: "AppSidebar" }
+export default {
+  name: "AppSidebar",
+  computed: {
+    user() {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    }
+  },
+  methods: {
+    canSee(...roles) {
+      return roles.includes(this.user.role);
+    }
+  }
+}
 </script>
 
 <style scoped>

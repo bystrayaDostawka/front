@@ -35,7 +35,9 @@ import AppModal from "@/components/AppModal.vue";
 import NotificationToast from "@/components/NotificationToast.vue";
 import AlertDialog from "@/components/AlertDialog.vue";
 import BankCreatePage from "./BankCreatePage.vue";
-import api from "@/api/api";
+
+import BanksController from "@/api/BanksController";
+import ModalTableMixin from "@/mixins/ModalTableMixin";
 
 export default {
     components: {
@@ -46,77 +48,35 @@ export default {
         AlertDialog,
         BankCreatePage,
     },
+    mixins: [ModalTableMixin],
     data() {
         return {
             banks: [],
-            loading: false,
-            notification: false,
-            notificationTitle: "",
-            notificationSubtitle: "",
-            notificationIsDanger: false,
-            modalDialog: false,
-            modalCloseDialog: false,
-            editingItem: null,
             columnsConfig: [
                 { name: "id", label: "ID" },
                 { name: "name", label: "Название" },
                 { name: "phone", label: "Телефон" },
                 { name: "email", label: "Email" },
+                { name: "order_prefix", label: "Префикс заказов" },
             ],
         };
     },
     created() {
-        this.fetchBanks();
+        this.fetchItems();
     },
     methods: {
-        itemMapper(bank, col) {
-            return bank[col] || "";
-        },
-        async fetchBanks() {
+        async fetchItems() {
             this.loading = true;
             try {
-                const res = await api.get("/banks");
-                this.banks = res.data;
+                this.banks = await BanksController.getItems();
             } catch (e) {
                 this.showNotification("Ошибка загрузки", e.message || "", true);
             } finally {
                 this.loading = false;
             }
         },
-        showModal(item = null) {
-            this.modalDialog = true;
-            this.editingItem = item;
-        },
-        closeModal() {
-            this.modalDialog = false;
-            this.editingItem = null;
-        },
-        confirmModalClose() {
-            this.modalCloseDialog = false;
-            this.closeModal();
-        },
-        handleSaved() {
-            this.showNotification("Банк успешно сохранён", "", false);
-            this.fetchBanks();
-            this.closeModal();
-        },
-        handleSavedError(m) {
-            this.showNotification("Ошибка сохранения", m, true);
-        },
-        handleDeleted() {
-            this.showNotification("Банк удалён", "", false);
-            this.fetchBanks();
-            this.closeModal();
-        },
-        handleDeletedError(m) {
-            this.showNotification("Ошибка удаления", m, true);
-        },
-        showNotification(title, subtitle = "", isDanger = false) {
-            this.notificationTitle = title;
-            this.notificationSubtitle = subtitle;
-            this.notificationIsDanger = isDanger;
-            this.notification = true;
-            setTimeout(() => (this.notification = false), 3000);
+        itemMapper(bank, col) {
+            return bank[col] || "";
         },
     },
 };

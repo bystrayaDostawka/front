@@ -13,7 +13,7 @@
       class="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto"
     >
       <li
-        v-for="s in statuses"
+        v-for="s in filteredStatuses"
         :key="s.id"
         class="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
         @click="selectStatus(s.id)"
@@ -26,7 +26,7 @@
 </template>
 
 <script>
-import api from "@/api/api";
+
 export default {
   props: {
     orderId: {
@@ -49,6 +49,9 @@ export default {
     return { isOpen: false };
   },
   computed: {
+    user() {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    },
     selectedStatus() {
       return Array.isArray(this.statuses)
         ? this.statuses.find((s) => s.id == this.value)
@@ -57,6 +60,12 @@ export default {
     selectedStyle() {
       const color = this.selectedStatus?.color;
       return color ? { backgroundColor: color + "22", color: "#000" } : {};
+    },
+    filteredStatuses() {
+      if (this.user.role === 'bank') {
+        return this.statuses.filter(s => Number(s.id) === 6);
+      }
+      return this.statuses;
     },
   },
   methods: {
@@ -68,7 +77,6 @@ export default {
         this.isOpen = false;
         return;
       }
-      await api.patch(`/orders/${this.orderId}/status`, { order_status_id: newId });
       this.onChanged?.(newId);
       this.isOpen = false;
     },

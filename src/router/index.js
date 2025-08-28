@@ -8,11 +8,12 @@ import OrderPage from "@/views/orders/OrderPage.vue";
 
 const routes = [
   { path: "/login", component: Login },
-  { path: "/", component: Dashboard, meta: { requiresAuth: true } },
-  { path: "/users", component: UserPage, meta: { requiresAuth: true } },
-  { path: "/orders", component: OrderPage, meta: { requiresAuth: true } },
-  { path: "/banks", component: BankPage, meta: { requiresAuth: true } },
-  { path: "/order-statuses", component: OrderStatusesPage, meta: { requiresAuth: true } },
+  { path: "/", component: OrderPage, meta: { requiresAuth: true, roles: ['admin', 'manager', 'bank', 'courier'] } },
+  { path: "/dashboard", component: Dashboard, meta: { requiresAuth: true, roles: ['admin', 'manager'] } },
+  { path: "/users", component: UserPage, meta: { requiresAuth: true, roles: ['admin', 'manager'] } },
+  { path: "/orders", component: OrderPage, meta: { requiresAuth: true, roles: ['admin', 'manager', 'bank'] } },
+  { path: "/banks", component: BankPage, meta: { requiresAuth: true, roles: ['admin', 'manager'] } },
+  { path: "/order-statuses", component: OrderStatusesPage, meta: { requiresAuth: true, roles: ['admin', 'manager'] } },
 ];
 
 const router = createRouter({
@@ -20,11 +21,15 @@ const router = createRouter({
   routes,
 });
 
-// Redirect if not logged in
+// Redirect if not logged in or not allowed by role
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || '{}');
   if (to.meta.requiresAuth && !token) {
     next("/login");
+  } else if (to.meta.roles && !to.meta.roles.includes(user.role)) {
+    // Если роль не разрешена для этого роута
+    next("/"); // или на страницу "Нет доступа"
   } else if (to.path === "/login" && token) {
     next("/");
   } else {

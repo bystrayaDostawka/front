@@ -26,13 +26,15 @@
 </template>
 
 <script>
-import PrimaryButton from '@/components/PrimaryButton.vue'
-import ResizableTable from '@/components/ResizableTable.vue'
-import AppModal from '@/components/AppModal.vue'
-import NotificationToast from '@/components/NotificationToast.vue'
-import OrderStatusCreatePage from './OrderStatusCreatePage.vue'
-import AlertDialog from '@/components/AlertDialog.vue'
-import api from '@/api/api'
+import PrimaryButton from '@/components/PrimaryButton.vue';
+import ResizableTable from '@/components/ResizableTable.vue';
+import AppModal from '@/components/AppModal.vue';
+import NotificationToast from '@/components/NotificationToast.vue';
+import OrderStatusCreatePage from './OrderStatusCreatePage.vue';
+import AlertDialog from '@/components/AlertDialog.vue';
+
+import OrderStatusesController from '@/api/OrderStatusesController';
+import ModalTableMixin from '@/mixins/ModalTableMixin';
 
 export default {
     components: {
@@ -41,86 +43,37 @@ export default {
         AppModal,
         NotificationToast,
         OrderStatusCreatePage,
-        AlertDialog
+        AlertDialog,
     },
+    mixins: [ModalTableMixin],
     data() {
         return {
             statuses: [],
-            loading: false,
-            notification: false,
-            notificationTitle: '',
-            notificationSubtitle: '',
-            notificationIsDanger: false,
-            modalDialog: false,
-            modalCloseDialog: false,
-            editingItem: null,
             columnsConfig: [
                 { name: 'id', label: 'ID' },
                 { name: 'title', label: 'Название' },
                 { name: 'color', label: 'Цвет', html: true },
-            ]
-        }
+            ],
+        };
     },
     created() {
-        this.fetchStatuses()
+        this.fetchItems();
     },
     methods: {
-        itemMapper(status, col) {
-            switch (col) {
-                case 'color':
-                    return status.color
-                        ? `<span class="px-2 py-1 rounded text-xs font-semibold" style="background:${status.color};color:#fff">${status.color}</span>`
-                        : '-'
-                default:
-                    return status[col] || ''
-            }
-        },
-        async fetchStatuses() {
-            this.loading = true
+        async fetchItems() {
+            this.loading = true;
             try {
-                const res = await api.get('/order-statuses')
-                this.statuses = res.data
+                this.statuses = await OrderStatusesController.getItems();
             } catch (e) {
-                this.showNotification('Ошибка загрузки', e.message || '', true)
+                this.showNotification('Ошибка загрузки', e.message || '', true);
             } finally {
-                this.loading = false
+                this.loading = false;
             }
         },
-        showModal(item = null) {
-            this.modalDialog = true
-            this.editingItem = item
+        itemMapper(status, col) {
+            if (col === 'color') return status.getFormattedColor();
+            return status[col] || '';
         },
-        closeModal() {
-            this.modalDialog = false
-            this.editingItem = null
-        },
-        confirmModalClose() {
-            this.modalCloseDialog = false;
-            this.closeModal();
-        },
-        handleSaved() {
-            this.showNotification('Статус успешно сохранён', '', false)
-            this.fetchStatuses()
-            this.closeModal()
-        },
-        handleSavedError(m) {
-            this.showNotification('Ошибка сохранения', m, true)
-        },
-        handleDeleted() {
-            this.showNotification('Статус удалён', '', false)
-            this.fetchStatuses()
-            this.closeModal()
-        },
-        handleDeletedError(m) {
-            this.showNotification('Ошибка удаления', m, true)
-        },
-        showNotification(title, subtitle = '', isDanger = false) {
-            this.notificationTitle = title
-            this.notificationSubtitle = subtitle
-            this.notificationIsDanger = isDanger
-            this.notification = true
-            setTimeout(() => (this.notification = false), 3000)
-        }
-    }
-}
+    },
+};
 </script>
