@@ -77,6 +77,15 @@
                     <textarea v-model="note" class="w-full border rounded px-3 py-2 resize-y min-h-[80px]" placeholder="Введите комментарий..."></textarea>
                 </div>
             </div>
+
+            <!-- Фотографии заказа -->
+            <div v-if="editingItem" class="mt-6">
+                <OrderPhotos
+                    :order-id="editingItem.id"
+                    :can-upload="false"
+                    @error="showNotification"
+                />
+            </div>
         </div>
         <div v-if="activeTab === 'log'" class="p-4 flex-1 overflow-auto">
             <div v-if="logLoading">Загрузка...</div>
@@ -120,6 +129,7 @@
 <script>
 import PrimaryButton from '@/components/PrimaryButton.vue';
 import AlertDialog from '@/components/AlertDialog.vue';
+import OrderPhotos from '@/components/OrderPhotos.vue';
 
 import BanksController from '@/api/BanksController';
 import UsersController from '@/api/UsersController';
@@ -130,7 +140,7 @@ import api from '@/api/api';
 import FormModalMixin from '@/mixins/FormModalMixin';
 
 export default {
-    components: { PrimaryButton, AlertDialog },
+    components: { PrimaryButton, AlertDialog, OrderPhotos },
     mixins: [FormModalMixin],
     props: { editingItem: { type: Object, default: null } },
     data() {
