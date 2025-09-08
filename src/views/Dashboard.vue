@@ -3,16 +3,16 @@
 
 
                 <!-- Фильтры -->
-        <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
-            <div class="flex flex-wrap items-center gap-4">
+        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-8">
+            <div class="flex flex-col md:flex-row md:flex-wrap md:items-center gap-4">
                 <!-- Фильтр по времени -->
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                     <button
                         v-for="period in datePeriods"
                         :key="period.value"
                         @click="changeDatePeriod(period.value)"
                         :class="[
-                            'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+                            'px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors',
                             selectedDatePeriod === period.value
                                 ? 'bg-blue-600 text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -23,28 +23,28 @@
                 </div>
 
                 <!-- Кастомный диапазон -->
-                <div v-if="selectedDatePeriod === 'custom'" class="flex items-center gap-2">
+                <div v-if="selectedDatePeriod === 'custom'" class="flex flex-col sm:flex-row sm:items-center gap-2">
                     <input
                         v-model="customDateFrom"
                         @change="applyCustomDateRange"
                         type="date"
-                        class="border rounded-lg px-3 py-2 text-sm"
+                        class="border rounded-lg px-3 py-2 text-sm w-full sm:w-auto"
                     />
-                    <span class="text-gray-500">—</span>
+                    <span class="text-gray-500 hidden sm:block">—</span>
                     <input
                         v-model="customDateTo"
                         @change="applyCustomDateRange"
                         type="date"
-                        class="border rounded-lg px-3 py-2 text-sm"
+                        class="border rounded-lg px-3 py-2 text-sm w-full sm:w-auto"
                     />
                 </div>
 
                 <!-- Фильтр по курьерам -->
-                <div>
+                <div class="w-full sm:w-auto">
                     <select
                         v-model="selectedCourier"
                         @change="applyFilters"
-                        class="border rounded-lg px-3 py-2 text-sm min-w-[150px]"
+                        class="border rounded-lg px-3 py-2 text-sm w-full sm:min-w-[150px]"
                     >
                         <option value="">Все курьеры</option>
                         <option v-for="courier in couriers" :key="courier.id" :value="courier.id">
@@ -54,11 +54,11 @@
                 </div>
 
                 <!-- Фильтр по банкам -->
-                <div>
+                <div class="w-full sm:w-auto">
                     <select
                         v-model="selectedBank"
                         @change="applyFilters"
-                        class="border rounded-lg px-3 py-2 text-sm min-w-[150px]"
+                        class="border rounded-lg px-3 py-2 text-sm w-full sm:min-w-[150px]"
                     >
                         <option value="">Все банки</option>
                         <option v-for="bank in banks" :key="bank.id" :value="bank.id">
@@ -70,143 +70,147 @@
                 <!-- Кнопка сброса фильтров -->
                 <button
                     @click="resetFilters"
-                    class="px-4 py-2 bg-gray-500 text-white rounded-lg text-sm font-medium hover:bg-gray-600"
+                    class="px-3 md:px-4 py-2 bg-gray-500 text-white rounded-lg text-xs md:text-sm font-medium hover:bg-gray-600 w-full sm:w-auto"
                 >
                     Сбросить фильтры
                 </button>
 
                 <!-- Текущий период -->
-                <div class="ml-auto text-sm text-gray-500">
+                <div class="md:ml-auto text-xs md:text-sm text-gray-500 text-center md:text-right">
                     {{ currentPeriodText }}
                 </div>
             </div>
         </div>
 
         <!-- Статистические карточки -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-                <span class="text-gray-500 mb-2">Всего заказов</span>
-                <span class="text-4xl font-bold text-blue-600">{{ stats.total_orders || 0 }}</span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow p-4 md:p-6 flex flex-col items-center">
+                <span class="text-gray-500 mb-2 text-xs md:text-sm text-center">Всего заказов</span>
+                <span class="text-2xl md:text-4xl font-bold text-blue-600">{{ stats.total_orders || 0 }}</span>
             </div>
-            <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-                <span class="text-gray-500 mb-2">Выполнено</span>
-                <span class="text-4xl font-bold text-green-600">{{ stats.completed_orders || 0 }}</span>
+            <div class="bg-white rounded-xl shadow p-4 md:p-6 flex flex-col items-center">
+                <span class="text-gray-500 mb-2 text-xs md:text-sm text-center">Выполнено</span>
+                <span class="text-2xl md:text-4xl font-bold text-green-600">{{ stats.completed_orders || 0 }}</span>
             </div>
-            <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-                <span class="text-gray-500 mb-2">Курьеров</span>
-                <span class="text-4xl font-bold text-purple-600">{{ stats.total_couriers || 0 }}</span>
+            <div class="bg-white rounded-xl shadow p-4 md:p-6 flex flex-col items-center">
+                <span class="text-gray-500 mb-2 text-xs md:text-sm text-center">Курьеров</span>
+                <span class="text-2xl md:text-4xl font-bold text-purple-600">{{ stats.total_couriers || 0 }}</span>
             </div>
-            <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-                <span class="text-gray-500 mb-2">Банков</span>
-                <span class="text-4xl font-bold text-indigo-600">{{ stats.total_banks || 0 }}</span>
+            <div class="bg-white rounded-xl shadow p-4 md:p-6 flex flex-col items-center">
+                <span class="text-gray-500 mb-2 text-xs md:text-sm text-center">Банков</span>
+                <span class="text-2xl md:text-4xl font-bold text-indigo-600">{{ stats.total_banks || 0 }}</span>
             </div>
         </div>
 
         <!-- Статистика за выбранный период -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow p-6">
-                <h3 class="text-lg font-semibold mb-4">За выбранный период</h3>
-                <div class="grid grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow p-4 md:p-6">
+                <h3 class="text-base md:text-lg font-semibold mb-4">За выбранный период</h3>
+                <div class="grid grid-cols-3 gap-2 md:gap-4">
                     <div class="text-center">
-                        <div class="text-2xl font-bold text-blue-600">{{ stats.period_orders || 0 }}</div>
-                        <div class="text-sm text-gray-500">Новых заказов</div>
+                        <div class="text-lg md:text-2xl font-bold text-blue-600">{{ stats.period_orders || 0 }}</div>
+                        <div class="text-xs md:text-sm text-gray-500">Новых заказов</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-2xl font-bold text-green-600">{{ stats.period_completed || 0 }}</div>
-                        <div class="text-sm text-gray-500">Выполнено</div>
+                        <div class="text-lg md:text-2xl font-bold text-green-600">{{ stats.period_completed || 0 }}</div>
+                        <div class="text-xs md:text-sm text-gray-500">Выполнено</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-2xl font-bold text-red-600">{{ stats.period_cancelled || 0 }}</div>
-                        <div class="text-sm text-gray-500">Отменено</div>
+                        <div class="text-lg md:text-2xl font-bold text-red-600">{{ stats.period_cancelled || 0 }}</div>
+                        <div class="text-xs md:text-sm text-gray-500">Отменено</div>
                     </div>
                 </div>
-                <div class="grid grid-cols-3 gap-4 mt-4">
+                <div class="grid grid-cols-3 gap-2 md:gap-4 mt-4">
                     <div class="text-center">
-                        <div class="text-xl font-bold text-yellow-600">{{ stats.postponed_orders || 0 }}</div>
-                        <div class="text-sm text-gray-500">Перенос</div>
+                        <div class="text-sm md:text-xl font-bold text-yellow-600">{{ stats.postponed_orders || 0 }}</div>
+                        <div class="text-xs md:text-sm text-gray-500">Перенос</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-xl font-bold text-purple-600">{{ stats.pending_verification || 0 }}</div>
-                        <div class="text-sm text-gray-500">Ждёт проверку</div>
+                        <div class="text-sm md:text-xl font-bold text-purple-600">{{ stats.pending_verification || 0 }}</div>
+                        <div class="text-xs md:text-sm text-gray-500">Ждёт проверку</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-xl font-bold text-orange-600">{{ stats.in_work_orders || 0 }}</div>
-                        <div class="text-sm text-gray-500">В работе</div>
+                        <div class="text-sm md:text-xl font-bold text-orange-600">{{ stats.in_work_orders || 0 }}</div>
+                        <div class="text-xs md:text-sm text-gray-500">В работе</div>
                     </div>
                 </div>
             </div>
-            <div class="bg-white rounded-xl shadow p-6">
-                <h3 class="text-lg font-semibold mb-4">Процент выполнения</h3>
+            <div class="bg-white rounded-xl shadow p-4 md:p-6">
+                <h3 class="text-base md:text-lg font-semibold mb-4">Процент выполнения</h3>
                 <div class="text-center">
-                    <div class="text-3xl font-bold text-blue-600">
+                    <div class="text-2xl md:text-3xl font-bold text-blue-600">
                         {{ completionRate }}%
                     </div>
-                    <div class="text-sm text-gray-500">Выполненных заказов</div>
+                    <div class="text-xs md:text-sm text-gray-500">Выполненных заказов</div>
                 </div>
             </div>
         </div>
 
         <!-- Графики -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-8">
             <!-- Круговая диаграмма статусов -->
-            <div class="bg-white rounded-xl shadow p-6">
-                <h3 class="text-lg font-semibold mb-4">Распределение по статусам</h3>
+            <div class="bg-white rounded-xl shadow p-4 md:p-6">
+                <h3 class="text-base md:text-lg font-semibold mb-4">Распределение по статусам</h3>
                 <div class="flex justify-center">
-                    <div class="relative w-48 h-48">
-                        <canvas ref="statusChart" width="200" height="200"></canvas>
+                    <div class="relative w-32 h-32 md:w-48 md:h-48">
+                        <canvas ref="statusChart" v-show="!loading"></canvas>
+                        <div v-if="loading" class="absolute inset-0 flex items-center justify-center">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
                         <div class="absolute inset-0 flex items-center justify-center">
                             <div class="text-center">
-                                <div class="text-2xl font-bold text-gray-700">{{ totalStatusOrders }}</div>
-                                <div class="text-sm text-gray-500">Всего</div>
+                                <div class="text-lg md:text-2xl font-bold text-gray-700">{{ totalStatusOrders }}</div>
+                                <div class="text-xs md:text-sm text-gray-500">Всего</div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-4 mt-4">
+                <div class="grid grid-cols-2 gap-2 md:gap-4 mt-4">
                     <div class="flex items-center">
-                        <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                        <span class="text-sm">Выполнено</span>
+                        <div class="w-2 h-2 md:w-3 md:h-3 bg-green-500 rounded-full mr-1 md:mr-2"></div>
+                        <span class="text-xs md:text-sm">Выполнено</span>
                     </div>
                     <div class="flex items-center">
-                        <div class="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
-                        <span class="text-sm">В работе</span>
+                        <div class="w-2 h-2 md:w-3 md:h-3 bg-orange-500 rounded-full mr-1 md:mr-2"></div>
+                        <span class="text-xs md:text-sm">В работе</span>
                     </div>
                     <div class="flex items-center">
-                        <div class="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
-                        <span class="text-sm">Ждёт проверку</span>
+                        <div class="w-2 h-2 md:w-3 md:h-3 bg-purple-500 rounded-full mr-1 md:mr-2"></div>
+                        <span class="text-xs md:text-sm">Ждёт проверку</span>
                     </div>
                     <div class="flex items-center">
-                        <div class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                        <span class="text-sm">Перенос</span>
+                        <div class="w-2 h-2 md:w-3 md:h-3 bg-yellow-500 rounded-full mr-1 md:mr-2"></div>
+                        <span class="text-xs md:text-sm">Перенос</span>
                     </div>
                 </div>
             </div>
 
             <!-- Столбчатая диаграмма -->
-            <div class="bg-white rounded-xl shadow p-6">
-                <h3 class="text-lg font-semibold mb-4">Статистика за период</h3>
-                <div class="h-64">
-                    <canvas ref="barChart" width="400" height="250"></canvas>
+            <div class="bg-white rounded-xl shadow p-4 md:p-6">
+                <h3 class="text-base md:text-lg font-semibold mb-4">Статистика за период</h3>
+                <div class="h-48 md:h-64 relative">
+                    <canvas ref="barChart" v-show="!loading"></canvas>
+                    <div v-if="loading" class="absolute inset-0 flex items-center justify-center">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Линейный график тренда -->
-        <div class="bg-white rounded-xl shadow p-6 mb-8">
-            <h3 class="text-lg font-semibold mb-4">Тренд выполнения заказов</h3>
-            <div class="h-64">
-                <canvas ref="lineChart" width="800" height="250"></canvas>
+        <div class="bg-white rounded-xl shadow p-4 md:p-6 mb-8">
+            <h3 class="text-base md:text-lg font-semibold mb-4">Тренд выполнения заказов</h3>
+            <div class="h-48 md:h-64 relative">
+                <canvas ref="lineChart" v-show="!loading"></canvas>
+                <div v-if="loading" class="absolute inset-0 flex items-center justify-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
             </div>
         </div>
 
         <!-- Загрузка -->
         <div v-if="loading" class="flex justify-center items-center py-8">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-
-        <!-- Ошибка -->
-        <div v-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {{ error }}
         </div>
     </div>
 </template>
@@ -243,6 +247,7 @@ export default {
             statusChart: null,
             barChart: null,
             lineChart: null,
+            resizeTimeout: null,
         };
     },
     computed: {
@@ -293,18 +298,33 @@ export default {
                     to: this.customDateTo
                 };
 
-                console.log('Fetching stats with params:', params);
-
                 const result = await StatisticsController.getDashboardStats(params);
-
-                console.log('Received stats:', result);
 
                 // Проверяем, что результат валидный
                 if (result && typeof result === 'object') {
                     this.stats = result;
-                    this.updateCharts();
+                    
+                    // Обновляем графики после получения данных
+                    this.$nextTick(() => {
+                        setTimeout(() => {
+                            this.updateCharts();
+                        }, 500);
+                    });
                 } else {
-                    this.stats = {};
+                    console.warn('Invalid stats result:', result);
+                    // Используем fallback данные при ошибке
+                    this.stats = {
+                        total_orders: 0,
+                        completed_orders: 0,
+                        total_couriers: 0,
+                        total_banks: 0,
+                        period_orders: 0,
+                        period_completed: 0,
+                        period_cancelled: 0,
+                        postponed_orders: 0,
+                        pending_verification: 0,
+                        in_work_orders: 0
+                    };
                 }
             } catch (e) {
                 console.error('Error fetching stats:', e);
@@ -321,7 +341,6 @@ export default {
 
 
         async changeDatePeriod(period) {
-            console.log('Changing date period to:', period);
             this.selectedDatePeriod = period;
             if (period !== 'custom') {
                 this.customDateFrom = '';
@@ -334,7 +353,6 @@ export default {
 
         applyCustomDateRange() {
             if (this.customDateFrom && this.customDateTo) {
-                console.log('Applying custom date range:', this.customDateFrom, 'to', this.customDateTo);
                 this.fetchDashboardData();
             }
         },
@@ -412,7 +430,20 @@ export default {
             }
 
             const ctx = this.$refs.barChart;
-            if (!ctx) return;
+            if (!ctx) {
+                console.warn('Bar chart canvas not found');
+                return;
+            }
+
+            const data = [
+                this.stats.period_orders || 0,
+                this.stats.period_completed || 0,
+                this.stats.period_cancelled || 0,
+                this.stats.in_work_orders || 0,
+                this.stats.pending_verification || 0,
+                this.stats.postponed_orders || 0
+            ];
+
 
             this.barChart = new Chart(ctx, {
                 type: 'bar',
@@ -420,14 +451,7 @@ export default {
                     labels: ['Новых', 'Выполнено', 'Отменено', 'В работе', 'Ждёт проверку', 'Перенос'],
                     datasets: [{
                         label: 'Количество заказов',
-                        data: [
-                            this.stats.period_orders || 0,
-                            this.stats.period_completed || 0,
-                            this.stats.period_cancelled || 0,
-                            this.stats.in_work_orders || 0,
-                            this.stats.pending_verification || 0,
-                            this.stats.postponed_orders || 0
-                        ],
+                        data: data,
                         backgroundColor: [
                             '#3B82F6',
                             '#10B981',
@@ -452,6 +476,9 @@ export default {
                             beginAtZero: true,
                             grid: {
                                 color: '#E5E7EB'
+                            },
+                            ticks: {
+                                stepSize: 1
                             }
                         },
                         x: {
@@ -459,6 +486,9 @@ export default {
                                 display: false
                             }
                         }
+                    },
+                    animation: {
+                        duration: 1000
                     }
                 }
             });
@@ -470,7 +500,10 @@ export default {
             }
 
             const ctx = this.$refs.lineChart;
-            if (!ctx) return;
+            if (!ctx) {
+                console.warn('Line chart canvas not found');
+                return;
+            }
 
             // Генерируем данные для тренда (за последние 7 дней)
             const labels = [];
@@ -488,6 +521,7 @@ export default {
                 completedData.push(Math.floor(baseCompleted * (0.8 + Math.random() * 0.4)));
                 totalData.push(Math.floor(baseTotal * (0.8 + Math.random() * 0.4)));
             }
+
 
             this.lineChart = new Chart(ctx, {
                 type: 'line',
@@ -525,6 +559,9 @@ export default {
                             beginAtZero: true,
                             grid: {
                                 color: '#E5E7EB'
+                            },
+                            ticks: {
+                                stepSize: 1
                             }
                         },
                         x: {
@@ -532,22 +569,39 @@ export default {
                                 display: false
                             }
                         }
+                    },
+                    animation: {
+                        duration: 1000
                     }
                 }
             });
         },
 
+
         updateCharts() {
             this.$nextTick(() => {
                 try {
-                    this.createStatusChart();
-                    this.createBarChart();
-                    this.createLineChart();
+                    // Небольшая задержка для корректного рендеринга после изменения размеров
+                    setTimeout(() => {
+                        this.createStatusChart();
+                        this.createBarChart();
+                        this.createLineChart();
+                    }, 200);
                 } catch (error) {
                     console.error('Error updating charts:', error);
                 }
             });
-        }
+        },
+
+        handleResize() {
+            // Перерисовываем графики при изменении размера окна
+            // Добавляем debounce для предотвращения частых обновлений
+            clearTimeout(this.resizeTimeout);
+            this.resizeTimeout = setTimeout(() => {
+                this.updateCharts();
+            }, 250);
+        },
+
     },
     beforeUnmount() {
         // Очищаем графики при уничтожении компонента
@@ -560,6 +614,14 @@ export default {
         if (this.lineChart) {
             this.lineChart.destroy();
         }
+        
+        // Очищаем timeout
+        if (this.resizeTimeout) {
+            clearTimeout(this.resizeTimeout);
+        }
+        
+        // Удаляем обработчик изменения размера окна
+        window.removeEventListener('resize', this.handleResize);
     }
 };
 </script>

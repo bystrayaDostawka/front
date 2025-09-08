@@ -1,15 +1,24 @@
 <template>
   <div>
-    <div class="flex items-center justify-end space-x-2 mb-2">
+    <div class="flex items-center justify-between md:justify-end space-x-2 mb-2">
       <div class="flex items-center space-x-2">
         <select v-model="pageSize" class="border rounded px-2 py-1">
           <option v-for="opt in [10, 25, 50]" :key="opt" :value="opt">{{ opt }}</option>
         </select>
-        <TableFilterButton :columns="columns" :default-columns="columnsConfig" @update:columns="handleColumnsUpdate" />
+        <!-- Кнопка настроек только для десктопа -->
+        <div class="desktop-settings-button">
+          <TableFilterButton :columns="columns" :default-columns="columnsConfig" @update:columns="handleColumnsUpdate" />
+        </div>
       </div>
     </div>
 
-    <table class="min-w-full bg-white shadow-md rounded mb-6 w-full">
+    <!-- Desktop table view -->
+    <div class="desktop-table-container overflow-x-auto">
+      <!-- Debug info -->
+      <div v-if="sortedData.length === 0" class="text-center py-8 text-gray-400">
+        Нет данных для отображения ({{ sortedData.length }} записей, {{ columns.length }} колонок)
+      </div>
+      <table v-else class="min-w-full bg-white shadow-md rounded mb-6 w-full table-auto">
       <thead>
         <tr class="bg-gray-100">
           <th style="width: 40px" class="py-2 px-4 font-semibold relative text-left border-r border-gray-200">
@@ -61,7 +70,66 @@
         </tr>
       </tbody>
     </table>
-    <div class="flex items-center justify-between mt-4">
+    </div>
+
+    <!-- Mobile card view -->
+    <div class="md:hidden space-y-3 mb-6 overflow-x-auto">
+      <!-- Mobile header with select all -->
+      <div class="flex items-center justify-between bg-gray-100 p-3 rounded-lg">
+        <div class="flex items-center space-x-2">
+          <input type="checkbox" :checked="allSelected" @change="toggleSelectAll" />
+          <span class="text-sm font-medium">Выбрать все</span>
+        </div>
+        <div class="text-sm text-gray-500">
+          {{ pagedData.length }} из {{ sortedData.length }}
+        </div>
+      </div>
+
+      <!-- Mobile cards -->
+      <div v-if="sortedData.length === 0" class="text-center py-8 text-gray-400">
+        Нет данных
+      </div>
+      
+      <div v-for="(item, i) in pagedData" :key="i" 
+           @click="(e) => rowClick(item, e)"
+           class="mobile-card bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow">
+        <!-- Card header with checkbox -->
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center space-x-2">
+            <input type="checkbox" 
+                   :checked="selectedIds.includes(item.id)" 
+                   @change="toggleSelect(item.id)"
+                   @click.stop />
+            <span class="text-sm font-medium text-gray-600">#{{ i + 1 }}</span>
+          </div>
+          <div class="text-xs text-gray-400">
+            ID: {{ item.id }}
+          </div>
+        </div>
+
+        <!-- Card content -->
+        <div class="space-y-2">
+          <div v-for="(col, j) in visibleColumns" :key="`${j}_${i}`" 
+               class="flex flex-col">
+            <div class="text-xs font-medium text-gray-500 mb-1">
+              {{ col.label }}:
+            </div>
+            <div class="text-sm text-gray-900 break-words">
+              <template v-if="col.component">
+                <component :is="col.component" v-bind="typeof col.props === 'function' ? col.props(item) : col.props" />
+              </template>
+              <template v-else>
+                <slot :name="`cell-${col.name}`" :item="item">
+                  <span v-if="col.html" v-html="itemMapper(item, col.name)"></span>
+                  <span v-else>{{ itemMapper(item, col.name) }}</span>
+                </slot>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 mt-4">
       <Pagination :current-page="currentPage" :total-pages="totalPages" @update:page="changePage" />
       <div>
         <span>Всего: {{ sortedData.length }}</span>
@@ -145,9 +213,16 @@ export default {
     totalPages() {
       return Math.max(1, Math.ceil(this.sortedData.length / this.pageSize));
     },
+    visibleColumns() {
+      return this.columns.filter(col => col.visible);
+    },
   },
   methods: {
     loadColumns() {
+      console.log('Loading columns:', {
+        tableKey: this.tableKey,
+        columnsConfig: this.columnsConfig?.length
+      });
       const saved = localStorage.getItem(`tableColumns_${this.tableKey}`);
       if (saved) {
         const savedColumns = JSON.parse(saved);
@@ -156,7 +231,7 @@ export default {
           return {
             ...savedCol,
             html: original.html,
-            component: original.component,
+            component: original.component ? markRaw(original.component) : original.component,
             props: original.props,
           };
         });
@@ -166,8 +241,10 @@ export default {
           sort_index: idx,
           visible: true,
           size: col.size ?? null,
+          component: col.component ? markRaw(col.component) : col.component,
         }));
       }
+      console.log('Columns loaded:', this.columns.length);
     },
     resetColumns() {
       this.columns = this.columnsConfig.map((col, idx) => ({
@@ -175,6 +252,7 @@ export default {
         sort_index: idx,
         visible: true,
         size: col.size ?? null,
+        component: col.component ? markRaw(col.component) : col.component,
       }));
       this.saveColumns();
     },
@@ -261,6 +339,11 @@ export default {
     },
   },
   mounted() {
+    console.log('ResizableTable mounted:', {
+      tableData: this.tableData?.length,
+      columnsConfig: this.columnsConfig?.length,
+      tableKey: this.tableKey
+    });
     this.loadColumns();
     const saved = localStorage.getItem(`tableSort_${this.tableKey}`);
     if (saved) {
@@ -268,7 +351,9 @@ export default {
         const { key, order } = JSON.parse(saved);
         this.sortKey = key;
         this.sortOrder = order;
-      } catch { }
+      } catch (e) {
+        console.warn('Failed to parse saved sort settings:', e);
+      }
     }
     const savedPageSize = localStorage.getItem(`tablePageSize_${this.tableKey}`);
     if (savedPageSize) {
@@ -285,8 +370,8 @@ export default {
       localStorage.setItem(`tablePageSize_${this.tableKey}`, val);
     },
     columnsConfig: {
-      handler(newVal) {
-        this.columns = newVal.map(col => col.component ? { ...col, component: markRaw(col.component) } : { ...col });
+      handler() {
+        this.loadColumns();
       },
       deep: true,
     }
@@ -301,5 +386,104 @@ export default {
 
 .resize-handle:hover {
   background: rgba(0, 0, 0, 0.15);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .resize-handle {
+    display: none;
+  }
+  
+  /* Hide desktop table on mobile */
+  .desktop-table-container {
+    display: none !important;
+  }
+  
+  /* Hide desktop settings button on mobile */
+  .desktop-settings-button {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Hide desktop table on small mobile */
+  .desktop-table-container {
+    display: none !important;
+  }
+  
+  /* Hide desktop settings button on small mobile */
+  .desktop-settings-button {
+    display: none !important;
+  }
+}
+
+/* Desktop table styles */
+.desktop-table-container {
+  display: none;
+}
+
+.desktop-settings-button {
+  display: none;
+}
+
+@media (min-width: 769px) {
+  .desktop-table-container {
+    display: block;
+  }
+  
+  .desktop-settings-button {
+    display: block;
+  }
+  
+  .desktop-table-container table {
+    font-size: 14px;
+    border-collapse: collapse;
+    table-layout: auto;
+    display: table !important;
+  }
+  
+  .desktop-table-container th, 
+  .desktop-table-container td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: table-cell !important;
+  }
+  
+  .desktop-table-container th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .desktop-table-container tbody tr:hover {
+    background-color: #f9fafb;
+  }
+  
+  .desktop-table-container tbody tr {
+    transition: background-color 0.2s ease;
+    display: table-row !important;
+  }
+}
+
+/* Mobile card styles */
+@media (max-width: 768px) {
+  .mobile-card {
+    transition: all 0.2s ease;
+  }
+  
+  .mobile-card:hover {
+    transform: translateY(-1px);
+  }
+  
+  .mobile-card:active {
+    transform: translateY(0);
+  }
 }
 </style>

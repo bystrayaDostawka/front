@@ -1,37 +1,37 @@
 <template>
     <div>
-        <div class="flex flex-wrap items-center gap-3 bg-white p-4 rounded-xl shadow mb-4">
-            <div class="relative">
+        <div class="flex flex-col md:flex-row md:flex-wrap md:items-center gap-3 bg-white p-4 rounded-xl shadow mb-4">
+            <div class="relative w-full md:w-auto">
                 <input
                     v-model="search"
                     @keyup.enter="fetchItems"
                     type="text"
                     placeholder="Поиск (номер заказа, имя, телефон)"
-                    class="border rounded-lg pl-10 pr-3 py-2 w-56 focus:ring-2 focus:ring-blue-200"
+                    class="border rounded-lg pl-10 pr-3 py-2 w-full md:w-56 focus:ring-2 focus:ring-blue-200"
                 />
                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
             </div>
-            <div>
-                <select v-model="filterStatus" @change="fetchItems" class="border rounded-lg px-3 py-2 min-w-[140px]">
+            <div class="w-full md:w-auto">
+                <select v-model="filterStatus" @change="fetchItems" class="border rounded-lg px-3 py-2 w-full md:min-w-[140px]">
                     <option value="">Все статусы</option>
                     <option v-for="s in statuses" :key="s.id" :value="s.id">{{ s.title }}</option>
                 </select>
             </div>
-            <div v-if="user.role !== 'bank'">
-                <select v-model="filterBank" @change="fetchItems" class="border rounded-lg px-3 py-2 min-w-[140px]">
+            <div v-if="user.role !== 'bank'" class="w-full md:w-auto">
+                <select v-model="filterBank" @change="fetchItems" class="border rounded-lg px-3 py-2 w-full md:min-w-[140px]">
                     <option value="">Все банки</option>
                     <option v-for="b in banks" :key="b.id" :value="b.id">{{ b.name }}</option>
                 </select>
             </div>
-            <div v-if="user.role !== 'bank'">
-                <select v-model="filterCourier" @change="fetchItems" class="border rounded-lg px-3 py-2 min-w-[140px]">
+            <div v-if="user.role !== 'bank'" class="w-full md:w-auto">
+                <select v-model="filterCourier" @change="fetchItems" class="border rounded-lg px-3 py-2 w-full md:min-w-[140px]">
                     <option value="">Все курьеры</option>
                     <option value="none">Без курьера</option>
                     <option v-for="c in couriers" :key="c.id" :value="c.id">{{ c.name }}</option>
                 </select>
             </div>
-            <div>
-                <select v-model="filterDateType" @change="onDateTypeChange" class="border rounded-lg px-3 py-2 min-w-[140px]">
+            <div class="w-full md:w-auto">
+                <select v-model="filterDateType" @change="onDateTypeChange" class="border rounded-lg px-3 py-2 w-full md:min-w-[140px]">
                     <option value="">Любая дата</option>
                     <option value="today">Сегодня</option>
                     <option value="yesterday">Вчера</option>
@@ -41,25 +41,27 @@
                     <option value="date">Конкретная дата</option>
                 </select>
             </div>
-            <div v-if="filterDateType === 'range'" class="flex items-center gap-1">
-                <input v-model="filterDateFrom" @change="fetchItems" type="date" class="border rounded-lg px-3 py-2 min-w-[120px]" placeholder="c" />
-                <span>-</span>
-                <input v-model="filterDateTo" @change="fetchItems" type="date" class="border rounded-lg px-3 py-2 min-w-[120px]" placeholder="по" />
+            <div v-if="filterDateType === 'range'" class="flex flex-col sm:flex-row sm:items-center gap-2 w-full md:w-auto">
+                <input v-model="filterDateFrom" @change="fetchItems" type="date" class="border rounded-lg px-3 py-2 w-full sm:min-w-[120px]" placeholder="c" />
+                <span class="hidden sm:block">-</span>
+                <input v-model="filterDateTo" @change="fetchItems" type="date" class="border rounded-lg px-3 py-2 w-full sm:min-w-[120px]" placeholder="по" />
             </div>
-            <div v-else-if="filterDateType === 'date'">
-                <input v-model="filterDate" @change="fetchItems" type="date" class="border rounded-lg px-3 py-2 min-w-[120px]" />
+            <div v-else-if="filterDateType === 'date'" class="w-full md:w-auto">
+                <input v-model="filterDate" @change="fetchItems" type="date" class="border rounded-lg px-3 py-2 w-full md:min-w-[120px]" />
             </div>
-            <button @click="resetFilters" class="ml-2 text-blue-600 hover:underline flex items-center gap-1">
+            <button @click="resetFilters" class="text-blue-600 hover:underline flex items-center gap-1 justify-center md:justify-start">
                 <i class="fas fa-times-circle"></i> Сбросить
             </button>
         </div>
-        <div class="flex justify-between items-center mb-4">
-            <PrimaryButton v-if="canAddOrder" :onclick="() => { showModal(null); }" icon="fas fa-plus">
-                Добавить заявку
-            </PrimaryButton>
-            <PrimaryButton v-if="canImportExcel" :onclick="openImportDialog" icon="fas fa-file-excel" class="ml-2 bg-green-600 hover:bg-green-700">
-                Импорт из Excel
-            </PrimaryButton>
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+            <div class="flex flex-col sm:flex-row gap-2">
+                <PrimaryButton v-if="canAddOrder" :onclick="() => { showModal(null); }" icon="fas fa-plus">
+                    Добавить заявку
+                </PrimaryButton>
+                <PrimaryButton v-if="canImportExcel" :onclick="openImportDialog" icon="fas fa-file-excel" class="bg-green-600 hover:bg-green-700">
+                    Импорт из Excel
+                </PrimaryButton>
+            </div>
             <input ref="importInput" type="file" accept=".xlsx,.xls" class="hidden" @change="handleImportFile" />
         </div>
         <div v-if="importErrors.length" class="import-errors">
@@ -68,15 +70,18 @@
             </div>
         </div>
         <div class="mb-4">
-            <button v-if="canImportExcel" @click="showImportExample = !showImportExample" class="text-blue-600 underline mb-2">
-                {{ showImportExample ? 'Скрыть пример' : 'Показать пример Excel-файла' }}
-            </button>
-            <button v-if="canImportExcel" @click="downloadExcelTemplate" class="text-green-700 underline ml-4 mb-2">
-                Скачать шаблон Excel
-            </button>
+            <div class="flex flex-col sm:flex-row gap-2 mb-2">
+                <button v-if="canImportExcel" @click="showImportExample = !showImportExample" class="text-blue-600 underline">
+                    {{ showImportExample ? 'Скрыть пример' : 'Показать пример Excel-файла' }}
+                </button>
+                <button v-if="canImportExcel" @click="downloadExcelTemplate" class="text-green-700 underline">
+                    Скачать шаблон Excel
+                </button>
+            </div>
             <div v-if="showImportExample && canImportExcel" class="bg-gray-50 border p-4 rounded">
                 <div class="font-semibold mb-2">Структура Excel-файла для импорта:</div>
-                <table class="w-full text-xs border mb-2">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs border mb-2 min-w-[600px]">
                     <thead>
                         <tr>
                             <th class="border px-2 py-1">product</th>
@@ -100,6 +105,7 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
                 <div class="text-xs text-gray-500">В первой строке должны быть именно такие <b>английские</b> названия столбцов: product, name, surname, patronymic, phone, address, delivery_at.<br>Дата доставки — в формате ГГГГ-ММ-ДД ЧЧ:ММ (например, 2025-08-01 14:00).</div>
             </div>
         </div>

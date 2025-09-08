@@ -19,5 +19,23 @@ export default { name: "AppFooter" }
     left: 200px;
     bottom: 0;
     width: calc(100% - 200px);
+    z-index: 30;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .app-footer {
+    left: 0;
+    width: 100%;
+    padding: 12px 0;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-footer {
+    padding: 8px 0;
+    font-size: 12px;
+  }
 }
 </style>

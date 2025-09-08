@@ -264,3 +264,84 @@ label.required::after {
     content: " *";
     color: red;
 }
+
+/* Mobile responsive adjustments for selects and inputs */
+@media (max-width: 768px) {
+    select {
+        padding: 8px;
+        font-size: 16px;
+        max-width: 100%;
+        min-height: 44px; /* Touch-friendly minimum height */
+        border-radius: 8px;
+    }
+    
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="password"],
+    input[type="file"],
+    input[type="date"],
+    input[type="datetime"],
+    input[type="datetime-local"] {
+        padding: 8px;
+        font-size: 16px;
+        min-height: 44px; /* Touch-friendly minimum height */
+        border-radius: 8px;
+    }
+    
+    label:not([type="checkbox"]) {
+        font-size: 14px;
+        margin-bottom: 6px;
+        margin-top: 12px;
+        font-weight: 600;
+    }
+    
+    body, select, input, textarea {
+        font-size: 16px !important; /* Prevent zoom on iOS */
+    }
+    
+    /* Improve button touch targets */
+    button {
+        min-height: 44px;
+        padding: 12px 16px;
+        font-size: 16px;
+        border-radius: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    select {
+        padding: 10px;
+        font-size: 16px;
+        min-height: 48px;
+    }
+    
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="password"],
+    input[type="file"],
+    input[type="date"],
+    input[type="datetime"],
+    input[type="datetime-local"] {
+        padding: 10px;
+        font-size: 16px;
+        min-height: 48px;
+    }
+    
+    label:not([type="checkbox"]) {
+        font-size: 16px;
+        margin-bottom: 8px;
+        margin-top: 16px;
+    }
+    
+    body, select, input, textarea {
+        font-size: 16px !important;
+    }
+    
+    button {
+        min-height: 48px;
+        padding: 14px 18px;
+        font-size: 16px;
+    }
+}

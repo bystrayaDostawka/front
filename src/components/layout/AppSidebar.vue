@@ -63,6 +63,7 @@ export default {
   background: #f4f8fb;
   border-right: 1px solid #e0e6ed;
   padding-top: 20px;
+  z-index: 40;
 }
 
 nav ul {
@@ -88,5 +89,17 @@ nav a {
 nav a.router-link-exact-active {
   background: #e6f0fa;
   color: #215aa0;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .app-sidebar {
+    display: none;
+    z-index: 50;
+  }
+  
+  .app-sidebar.mobile-open {
+    display: block;
+  }
 }
 </style>

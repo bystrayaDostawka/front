@@ -6,7 +6,7 @@
         </button>
         <transition name="appear">
             <div v-if="isOpen"
-                class="absolute right-0 mt-1 w-60 bg-white shadow-md rounded border border-gray-200 p-2 z-10 min-w-[180px]">
+                class="absolute right-0 mt-1 w-60 md:w-60 sm:w-48 bg-white shadow-md rounded border border-gray-200 p-2 z-20 min-w-[180px]">
                 <ul>
                     <draggable v-if="columns.length" :list="localColumns" handle=".handle" item-key="name"
                         @end="emitUpdate" class="dragArea list-group w-full space-y-1">
@@ -123,5 +123,26 @@ export default {
     transform: scaleY(1);
     opacity: 1;
     transform-origin: top;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .absolute.right-0 {
+        right: 0 !important;
+        left: auto !important;
+        width: 240px !important;
+        max-width: calc(100vw - 32px) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .absolute.right-0 {
+        width: 200px !important;
+        font-size: 14px;
+    }
+    
+    li {
+        padding: 8px 4px !important;
+    }
 }
 </style>

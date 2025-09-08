@@ -10,7 +10,7 @@
     </div>
     <ul
       v-if="isOpen"
-      class="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto"
+      class="absolute z-20 mt-1 w-full min-w-[120px] max-w-[200px] bg-white border rounded shadow-lg max-h-60 overflow-auto"
     >
       <li
         v-for="s in filteredStatuses"
@@ -19,7 +19,7 @@
         @click="selectStatus(s.id)"
         :style="{ backgroundColor: s.color || '#eee', color: '#000' }"
       >
-        <span>{{ s.title }}</span>
+        <span class="truncate">{{ s.title }}</span>
       </li>
     </ul>
   </div>
