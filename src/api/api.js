@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_BASE;
 
 const api = axios.create({
   baseURL: API_URL,
@@ -18,9 +18,7 @@ api.interceptors.response.use(
   error => {
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('token');
-      // Если используете Vue Router:
-      // import router from '@/router';
-      // router.push('/login');
+      localStorage.removeItem('user');
     }
     return Promise.reject(error);
   }

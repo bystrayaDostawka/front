@@ -7,9 +7,8 @@
                     @keyup.enter="fetchItems"
                     type="text"
                     placeholder="Поиск (номер заказа, имя, телефон)"
-                    class="border rounded-lg pl-10 pr-3 py-2 w-full md:w-56 focus:ring-2 focus:ring-blue-200"
+                    class="border rounded-lg px-3 py-2 w-full md:w-96 focus:ring-2 focus:ring-blue-200"
                 />
-                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
             </div>
             <div class="w-full md:w-auto">
                 <select v-model="filterStatus" @change="fetchItems" class="border rounded-lg px-3 py-2 w-full md:min-w-[140px]">
