@@ -18,7 +18,9 @@ export default class UsersController {
             item.bank_id,
             item.bank,
             item.created_at,
-            item.updated_at
+            item.updated_at,
+            item.bank_access_key,
+            item.bank_key_expires_at
           )
       );
     } catch (error) {
@@ -41,7 +43,9 @@ export default class UsersController {
         data.bank_id,
         data.bank,
         data.created_at,
-        data.updated_at
+        data.updated_at,
+        data.bank_access_key,
+        data.bank_key_expires_at
       );
     } catch (error) {
       console.error("Ошибка при создании пользователя:", error);
@@ -63,7 +67,9 @@ export default class UsersController {
         data.bank_id,
         data.bank,
         data.created_at,
-        data.updated_at
+        data.updated_at,
+        data.bank_access_key,
+        data.bank_key_expires_at
       );
     } catch (error) {
       console.error("Ошибка при обновлении пользователя:", error);
@@ -99,7 +105,9 @@ export default class UsersController {
             item.bank_id,
             item.bank,
             item.created_at,
-            item.updated_at
+            item.updated_at,
+            item.bank_access_key,
+            item.bank_key_expires_at
           )
       );
     } catch (error) {
@@ -126,6 +134,17 @@ export default class UsersController {
       return data;
     } catch (error) {
       console.error('Ошибка при получении batch activity log пользователей:', error);
+      throw error;
+    }
+  }
+
+  // Обновление банковского ключа
+  static async regenerateBankKey(id) {
+    try {
+      const { data } = await api.post(`/users/${id}/regenerate-bank-key`);
+      return data;
+    } catch (error) {
+      console.error("Ошибка при обновлении банковского ключа:", error);
       throw error;
     }
   }

@@ -48,7 +48,6 @@ export default {
 .main-content.with-sidebar {
   margin-left: 200px;
   margin-bottom: 60px;
-  margin-top: 56px;
   min-height: calc(100vh - 56px - 48px);
   padding: 32px;
   background: #fff;
@@ -59,8 +58,7 @@ export default {
   .main-content.with-sidebar {
     margin-left: 0;
     margin-bottom: 80px;
-    margin-top: 56px;
-    padding: 16px;
+    padding: 4px 16px 16px 16px;
     min-height: calc(100vh - 56px - 60px);
     overflow-x: hidden; /* Prevent horizontal scroll */
   }

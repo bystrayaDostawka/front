@@ -72,6 +72,67 @@
                         Активен
                     </label>
                 </div>
+                
+                <!-- Банковский ключ доступа -->
+                <div v-if="role === 'bank'">
+                    <label class="required">Ключ доступа</label>
+                    <div class="relative flex items-center">
+                        <input 
+                            v-model="bankAccessKey" 
+                            type="text" 
+                            placeholder="Введите ключ доступа" 
+                            class="flex-1 border rounded px-3 py-2 font-mono pr-20"
+                        />
+                        <button 
+                            type="button" 
+                            @click="generateBankKey"
+                            class="absolute right-10 top-1/2 -translate-y-1/2 text-gray-500" 
+                            title="Сгенерировать ключ"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                        </button>
+                        <button 
+                            type="button" 
+                            @click="copyToClipboard(bankAccessKey)"
+                            :disabled="!bankAccessKey"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 disabled:opacity-50" 
+                            title="Копировать ключ"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Информация о сроке под полем -->
+                    <div class="mt-1 flex items-center justify-between">
+                        <div class="text-xs text-gray-500">
+                            <span v-if="!editingItem || !editingItem.bank_key_expires_at">
+                                Срок истечет через 30 дней с момента создания
+                            </span>
+                            <span v-else>
+                                Срок истечет через 
+                                <span 
+                                    :class="[
+                                        'font-medium',
+                                        getDaysLeft(editingItem.bank_key_expires_at) <= 3 
+                                            ? 'text-red-600' 
+                                            : getDaysLeft(editingItem.bank_key_expires_at) <= 7 
+                                                ? 'text-yellow-600'
+                                                : 'text-green-600'
+                                    ]"
+                                >
+                                    {{ getDaysLeft(editingItem.bank_key_expires_at) }} {{ getDaysLeft(editingItem.bank_key_expires_at) === 1 ? 'день' : getDaysLeft(editingItem.bank_key_expires_at) < 5 ? 'дня' : 'дней' }}
+                                </span>
+                            </span>
+                        </div>
+                        <div v-if="editingItem && editingItem.bank_key_expires_at" class="text-xs text-gray-400">
+                            До {{ formatDate(editingItem.bank_key_expires_at) }}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div v-if="activeTab === 'log'" class="p-4 flex-1 overflow-auto">
@@ -142,6 +203,8 @@ export default {
             phoneError: false,
             emailError: false,
             showPassword: false,
+            regeneratingKey: false,
+            bankAccessKey: '',
         };
     },
     computed: {
@@ -210,6 +273,7 @@ export default {
             this.bank_id = item?.bank_id || item?.bank?.id || '';
             this.password = '';
             this.is_active = item?.is_active ?? true;
+            this.bankAccessKey = item?.bank_access_key || '';
         },
 
         clearForm() {
@@ -220,10 +284,11 @@ export default {
             this.bank_id = '';
             this.password = '';
             this.is_active = true;
+            this.bankAccessKey = '';
         },
 
         _getFormState() {
-            return {
+            const state = {
                 name: this.name,
                 email: this.email,
                 phone: this.phone,
@@ -231,6 +296,14 @@ export default {
                 bank_id: this.bank_id,
                 is_active: this.is_active,
             };
+
+            // Добавляем банковский ключ только для банковских пользователей
+            if (this.role === 'bank' && this.bankAccessKey) {
+                state.bank_access_key = this.bankAccessKey;
+                state.bank_key_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 дней
+            }
+
+            return state;
         },
 
         async loadActivityLog() {
@@ -265,6 +338,60 @@ export default {
             }
             this.password = pass;
             this.showPassword = true;
+        },
+
+        // Методы для работы с банковским ключом
+        generateBankKey() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let key = '';
+            for (let i = 0; i < 12; i++) {
+                key += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            this.bankAccessKey = key;
+        },
+
+        async regenerateBankKey() {
+            if (!this.editingItem) return;
+            
+            this.regeneratingKey = true;
+            try {
+                const response = await UsersController.regenerateBankKey(this.editingItem.id);
+                this.editingItem.bank_access_key = response.bank_access_key;
+                this.editingItem.bank_key_expires_at = response.bank_key_expires_at;
+                this.$emit('saved', this.editingItem);
+            } catch (e) {
+                this.$emit('saved-error', this.getApiErrorMessage(e));
+            } finally {
+                this.regeneratingKey = false;
+            }
+        },
+
+        copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Можно добавить уведомление об успешном копировании
+                console.log('Ключ скопирован в буфер обмена');
+            }).catch(err => {
+                console.error('Ошибка копирования:', err);
+            });
+        },
+
+        formatDate(dateString) {
+            if (!dateString) return 'Не указано';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ru-RU', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        },
+
+        getDaysLeft(expiresAt) {
+            if (!expiresAt) return 0;
+            const now = new Date();
+            const expiry = new Date(expiresAt);
+            const diffTime = expiry - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return Math.max(0, diffDays);
         },
     },
 };

@@ -9,7 +9,9 @@ export default class UserDto {
     bank_id = null,
     bank = null,
     created_at = "",
-    updated_at = ""
+    updated_at = "",
+    bank_access_key = null,
+    bank_key_expires_at = null
   ) {
     this.id = id;
     this.name = name;
@@ -21,6 +23,8 @@ export default class UserDto {
     this.bank = bank; // объект { id, name } или null
     this.created_at = created_at;
     this.updated_at = updated_at;
+    this.bank_access_key = bank_access_key;
+    this.bank_key_expires_at = bank_key_expires_at;
   }
 
   formatStatus() {

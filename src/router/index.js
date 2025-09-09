@@ -24,14 +24,28 @@ const router = createRouter({
 // Redirect if not logged in or not allowed by role
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user") || '{}');
+  let user = {};
+  
+  try {
+    user = JSON.parse(localStorage.getItem("user") || '{}');
+  } catch (e) {
+    console.error('Error parsing user data:', e);
+    user = {};
+  }
+  
   if (to.meta.requiresAuth && !token) {
     next("/login");
-  } else if (to.meta.roles && !to.meta.roles.includes(user.role)) {
-    // Если роль не разрешена для этого роута
-    next("/"); // или на страницу "Нет доступа"
   } else if (to.path === "/login" && token) {
     next("/");
+  } else if (to.meta.roles && user.role && !to.meta.roles.includes(user.role)) {
+    // Если роль не разрешена для этого роута, перенаправляем на доступную страницу
+    if (user.role === 'courier') {
+      next("/");
+    } else if (user.role === 'bank') {
+      next("/orders");
+    } else {
+      next("/dashboard");
+    }
   } else {
     next();
   }
