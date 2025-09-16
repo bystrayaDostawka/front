@@ -6,7 +6,7 @@
         </button>
         <transition name="appear">
             <div v-if="isOpen"
-                class="absolute right-0 mt-1 w-60 md:w-60 sm:w-48 bg-white shadow-md rounded border border-gray-200 p-2 z-20 min-w-[180px]">
+                class="absolute right-0 mt-1 w-60 md:w-60 sm:w-48 bg-white shadow-md rounded border border-gray-200 p-2 z-50 min-w-[180px]">
                 <ul>
                     <draggable v-if="columns.length" :list="localColumns" handle=".handle" item-key="name"
                         @end="emitUpdate" class="dragArea list-group w-full space-y-1">

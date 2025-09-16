@@ -219,10 +219,6 @@ export default {
   },
   methods: {
     loadColumns() {
-      console.log('Loading columns:', {
-        tableKey: this.tableKey,
-        columnsConfig: this.columnsConfig?.length
-      });
       const saved = localStorage.getItem(`tableColumns_${this.tableKey}`);
       if (saved) {
         const savedColumns = JSON.parse(saved);
@@ -244,7 +240,6 @@ export default {
           component: col.component ? markRaw(col.component) : col.component,
         }));
       }
-      console.log('Columns loaded:', this.columns.length);
     },
     resetColumns() {
       this.columns = this.columnsConfig.map((col, idx) => ({
@@ -339,11 +334,6 @@ export default {
     },
   },
   mounted() {
-    console.log('ResizableTable mounted:', {
-      tableData: this.tableData?.length,
-      columnsConfig: this.columnsConfig?.length,
-      tableKey: this.tableKey
-    });
     this.loadColumns();
     const saved = localStorage.getItem(`tableSort_${this.tableKey}`);
     if (saved) {
@@ -352,7 +342,7 @@ export default {
         this.sortKey = key;
         this.sortOrder = order;
       } catch (e) {
-        console.warn('Failed to parse saved sort settings:', e);
+        // Failed to parse saved sort settings
       }
     }
     const savedPageSize = localStorage.getItem(`tablePageSize_${this.tableKey}`);
@@ -470,6 +460,7 @@ export default {
     transition: background-color 0.2s ease;
     display: table-row !important;
   }
+  
 }
 
 /* Mobile card styles */

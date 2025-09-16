@@ -434,8 +434,6 @@ export default {
             this.fetchItems();
         },
         showModal(item, event) {
-            // Банк не может открывать форму редактирования заказа
-            if (this.user.role === 'bank') return;
             if (event && event.target && event.target.closest && event.target.closest('.status-dropdown')) {
                 return;
             }
@@ -451,8 +449,8 @@ export default {
             return JSON.parse(localStorage.getItem('user') || '{}');
         },
         canAddOrder() {
-            // Только не courier и не bank
-            return !['courier', 'bank'].includes(this.user.role);
+            // Только не courier
+            return !['courier'].includes(this.user.role);
         },
         canImportExcel() {
             // Только admin и bank

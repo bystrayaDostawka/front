@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Login from "../views/Login.vue";
 import Dashboard from "../views/Dashboard.vue";
+import BankDashboard from "../views/BankDashboard.vue";
 import UserPage from "../views/users/UserPage.vue";
 import OrderStatusesPage from "../views/statuses/OrderStatusesPage.vue";
 import BankPage from "../views/banks/BankPage.vue";
@@ -10,10 +11,11 @@ const routes = [
   { path: "/login", component: Login },
   { path: "/", component: OrderPage, meta: { requiresAuth: true, roles: ['admin', 'manager', 'bank', 'courier'] } },
   { path: "/dashboard", component: Dashboard, meta: { requiresAuth: true, roles: ['admin', 'manager'] } },
+  { path: "/bank-dashboard", component: BankDashboard, meta: { requiresAuth: true, roles: ['bank'] } },
   { path: "/users", component: UserPage, meta: { requiresAuth: true, roles: ['admin', 'manager'] } },
   { path: "/orders", component: OrderPage, meta: { requiresAuth: true, roles: ['admin', 'manager', 'bank'] } },
   { path: "/banks", component: BankPage, meta: { requiresAuth: true, roles: ['admin', 'manager'] } },
-  { path: "/order-statuses", component: OrderStatusesPage, meta: { requiresAuth: true, roles: ['admin', 'manager'] } },
+  { path: "/order-statuses", component: OrderStatusesPage, meta: { requiresAuth: true, roles: ['admin', 'manager', 'bank'] } },
 ];
 
 const router = createRouter({
@@ -42,7 +44,7 @@ router.beforeEach((to, from, next) => {
     if (user.role === 'courier') {
       next("/");
     } else if (user.role === 'bank') {
-      next("/orders");
+      next("/bank-dashboard");
     } else {
       next("/dashboard");
     }

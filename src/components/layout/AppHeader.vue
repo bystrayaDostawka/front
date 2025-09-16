@@ -15,9 +15,15 @@
       </div>
     </div>
     <div class="user-info">
-      <span v-if="user" class="hidden sm:inline">{{ user.name }} ({{ user.role }})</span>
-      <span v-if="user" class="sm:hidden">{{ user.name }}</span>
-      <button @click="logout" class="text-sm">Выйти</button>
+      <div v-if="user && user.name" class="user-details">
+        <span class="user-name">{{ user.name }}</span>
+        <span class="user-role">{{ getRoleDisplayName(user.role) }}</span>
+      </div>
+      <div v-else class="user-details">
+        <span class="user-name">Гость</span>
+        <span class="user-role">Не авторизован</span>
+      </div>
+      <button @click="logout" class="logout-btn">Выйти</button>
     </div>
   </header>
 </template>
@@ -36,8 +42,11 @@ export default {
     user() {
       // Обычно данные пользователя хранят в store или localStorage
       try {
-        return JSON.parse(localStorage.getItem('user'));
-      } catch {
+        const userData = JSON.parse(localStorage.getItem('user'));
+        console.log('User data from localStorage:', userData);
+        return userData;
+      } catch (error) {
+        console.log('Error parsing user data:', error);
         return null;
       }
     }
@@ -54,11 +63,17 @@ export default {
       localStorage.removeItem('user');
       this.$router.push('/login');
     },
-    toggleMobileMenu() {
-      this.$emit('toggle-mobile-menu');
-    },
     checkMobile() {
       this.isMobile = window.innerWidth <= 768;
+    },
+    getRoleDisplayName(role) {
+      const roleNames = {
+        'admin': 'Администратор',
+        'manager': 'Менеджер',
+        'courier': 'Курьер',
+        'bank': 'Банк'
+      };
+      return roleNames[role] || role;
     }
   },
   mounted() {
@@ -108,27 +123,56 @@ export default {
 .user-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.user-role {
+  font-size: 12px;
+  color: #e3f2fd;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.logout-btn {
+  background: #fff;
+  color: #2F80ED;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: #f5f5f5;
+  transform: translateY(-1px);
 }
 
 @media (min-width: 640px) {
   .user-info {
     gap: 16px;
   }
-}
-button {
-  background: #fff;
-  color: #2F80ED;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 3px;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 14px;
-}
-
-@media (min-width: 640px) {
-  button {
+  
+  .logout-btn {
     padding: 6px 18px;
   }
 }
@@ -147,11 +191,20 @@ button {
     gap: 8px;
   }
   
-  .user-info span {
-    display: none;
+  .user-details {
+    align-items: flex-end;
   }
   
-  button {
+  .user-name {
+    font-size: 13px;
+  }
+  
+  .user-role {
+    font-size: 11px;
+    padding: 1px 6px;
+  }
+  
+  .logout-btn {
     padding: 6px 12px;
     font-size: 14px;
   }
