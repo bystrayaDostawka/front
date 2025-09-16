@@ -86,6 +86,16 @@
                     @error="showNotification"
                 />
             </div>
+
+            <!-- Файлы заказа -->
+            <div v-if="editingItem" class="mt-6">
+                <OrderFiles
+                    :order-id="editingItem.id"
+                    :can-upload="canUploadFiles"
+                    :current-user="currentUser"
+                    @error="showNotification"
+                />
+            </div>
         </div>
         <div v-if="activeTab === 'log'" class="p-4 flex-1 overflow-auto">
             <div v-if="logLoading">Загрузка...</div>
@@ -130,6 +140,7 @@
 import PrimaryButton from '@/components/PrimaryButton.vue';
 import AlertDialog from '@/components/AlertDialog.vue';
 import OrderPhotos from '@/components/OrderPhotos.vue';
+import OrderFiles from '@/components/OrderFiles.vue';
 
 import BanksController from '@/api/BanksController';
 import UsersController from '@/api/UsersController';
@@ -140,7 +151,7 @@ import api from '@/api/api';
 import FormModalMixin from '@/mixins/FormModalMixin';
 
 export default {
-    components: { PrimaryButton, AlertDialog, OrderPhotos },
+    components: { PrimaryButton, AlertDialog, OrderPhotos, OrderFiles },
     mixins: [FormModalMixin],
     props: { editingItem: { type: Object, default: null } },
     data() {
@@ -201,6 +212,13 @@ export default {
                 return this.statuses.filter(s => Number(s.id) === 6);
             }
             return this.statuses;
+        },
+        canUploadFiles() {
+            // Все пользователи кроме курьеров могут загружать файлы
+            return this.user.role !== 'courier';
+        },
+        currentUser() {
+            return this.user;
         },
     },
     methods: {
