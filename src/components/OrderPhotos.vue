@@ -51,9 +51,9 @@
           @click="openModal(photo)"
         />
 
-        <!-- Кнопка удаления (только для курьеров) -->
+        <!-- Кнопка удаления (для курьеров, админов и менеджеров) -->
         <button
-          v-if="canUpload"
+          v-if="canDelete"
           @click="deletePhoto(photo.id)"
           class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
         >
@@ -121,6 +121,10 @@ export default {
       required: true
     },
     canUpload: {
+      type: Boolean,
+      default: false
+    },
+    canDelete: {
       type: Boolean,
       default: false
     }
@@ -204,12 +208,15 @@ export default {
     },
 
     async deletePhoto(photoId) {
-      if (!confirm('Удалить фотографию?')) {
-        return;
-      }
-
       try {
-        await OrderPhotosController.deletePhoto(this.orderId, photoId);
+        // Определяем, какой API использовать в зависимости от роли пользователя
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (['admin', 'manager'].includes(user.role)) {
+          await OrderPhotosController.deletePhotoAdmin(this.orderId, photoId);
+        } else {
+          await OrderPhotosController.deletePhoto(this.orderId, photoId);
+        }
+        
         this.photos = this.photos.filter(photo => photo.id !== photoId);
         this.$emit('photo-deleted', photoId);
       } catch (error) {

@@ -33,5 +33,11 @@ export default {
   async deletePhoto(orderId, photoId) {
     const response = await api.delete(`/mobile/orders/${orderId}/photos/${photoId}`);
     return response.data;
+  },
+
+  // Удалить фотографию (для админов и менеджеров)
+  async deletePhotoAdmin(orderId, photoId) {
+    const response = await api.delete(`/orders/${orderId}/photos/${photoId}`);
+    return response.data;
   }
 };

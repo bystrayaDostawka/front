@@ -90,10 +90,6 @@
                     <label>Комментарий</label>
                     <textarea v-model="note" class="w-full border rounded px-3 py-2 resize-y min-h-[80px]" placeholder="Введите комментарий..."></textarea>
                 </div>
-                <div v-if="editingItem && user.role === 'courier'">
-                    <label>Заметка курьера</label>
-                    <textarea v-model="courier_note" class="w-full border rounded px-3 py-2 resize-y min-h-[80px]" placeholder="Введите заметку курьера..."></textarea>
-                </div>
             </div>
 
         </div>
@@ -101,6 +97,7 @@
             <OrderPhotos
                 :order-id="editingItem.id"
                 :can-upload="false"
+                :can-delete="canDeletePhotos"
                 @error="showNotification"
             />
         </div>
@@ -168,6 +165,7 @@ import FormModalMixin from '@/mixins/FormModalMixin';
 export default {
     components: { PrimaryButton, AlertDialog, OrderPhotos, OrderFiles },
     mixins: [FormModalMixin],
+    emits: ['saved', 'saved-error', 'deleted', 'deleted-error', 'notification'],
     props: { editingItem: { type: Object, default: null } },
     data() {
         return {
@@ -182,7 +180,6 @@ export default {
             courier_id: '',
             order_status_id: '',
             note: '',
-            courier_note: '',
             banks: [],
             couriers: [],
             statuses: [],
@@ -233,7 +230,6 @@ export default {
             }
             return this.statuses;
         },
-<<<<<<< HEAD
         userBankName() {
             if (this.isBank && this.user.bank) {
                 return this.user.bank.name;
@@ -246,17 +242,24 @@ export default {
                 }
             }
             return '';
-=======
+        },
         canUploadFiles() {
             // Все пользователи кроме курьеров могут загружать файлы
             return this.user.role !== 'courier';
         },
+        canDeletePhotos() {
+            // Админы и менеджеры могут удалять фотографии
+            return ['admin', 'manager'].includes(this.user.role);
+        },
         currentUser() {
             return this.user;
->>>>>>> 2cfebd692f1857645a949f3de868be7bbed20728
         },
     },
     methods: {
+        showNotification(title, message, isError = false) {
+            // Эмитим событие для родительского компонента
+            this.$emit('notification', { title, message, isError });
+        },
         async loadDictionaries() {
             try {
                 const [banks, couriers, statuses] = await Promise.all([
@@ -353,7 +356,6 @@ export default {
                 this.courier_id = '';
                 this.order_status_id = '';
                 this.note = '';
-                this.courier_note = '';
                 this.declined_reason = '';
             } else {
                 // Для банковских пользователей при редактировании банк остается их банком
@@ -371,7 +373,6 @@ export default {
                 this.courier_id = this.isBank ? '' : (item.courier_id || item.courier?.id || '');
                 this.order_status_id = item.order_status_id || item.status?.id || '';
                 this.note = item.note || '';
-                this.courier_note = item.courier_note || '';
                 this.declined_reason = item.declined_reason || '';
             }
         },
@@ -388,7 +389,6 @@ export default {
             this.courier_id = '';
             this.order_status_id = '';
             this.note = '';
-            this.courier_note = '';
             this.declined_reason = '';
         },
 
@@ -405,7 +405,6 @@ export default {
                 courier_id: this.courier_id,
                 order_status_id: this.order_status_id,
                 note: this.note,
-                courier_note: this.courier_note,
             };
         },
 

@@ -20,7 +20,6 @@ export default class OrdersController {
             item.delivery_at,
             item.deliveried_at,
             item.note,
-            item.courier_note,
             item.declined_reason,
             item.bank_id,
             item.bank,
@@ -37,6 +36,38 @@ export default class OrdersController {
       return items;
     } catch (error) {
       console.error("Ошибка при получении заказов:", error);
+      throw error;
+    }
+  }
+
+  static async getItem(id) {
+    try {
+      const response = await api.get(`/orders/${id}`);
+      const item = response.data;
+      return new OrderDto(
+        item.id,
+        item.product,
+        item.name,
+        item.surname,
+        item.patronymic,
+        item.phone,
+        item.address,
+        item.delivery_at,
+        item.deliveried_at,
+        item.note,
+        item.declined_reason,
+        item.bank_id,
+        item.bank,
+        item.courier_id,
+        item.courier,
+        item.order_status_id,
+        item.status,
+        item.order_number,
+        item.created_at,
+        item.updated_at
+      );
+    } catch (error) {
+      console.error("Ошибка при получении заказа:", error);
       throw error;
     }
   }
@@ -58,7 +89,6 @@ export default class OrdersController {
             item.delivery_at,
             item.deliveried_at,
             item.note,
-            item.courier_note,
             item.declined_reason,
             item.bank_id,
             item.bank,
@@ -91,7 +121,6 @@ export default class OrdersController {
         data.delivery_at,
         data.deliveried_at,
         data.note,
-        data.courier_note,
         data.declined_reason,
         data.bank_id,
         data.bank,
@@ -123,7 +152,6 @@ export default class OrdersController {
         data.delivery_at,
         data.deliveried_at,
         data.note,
-        data.courier_note,
         data.declined_reason,
         data.bank_id,
         data.bank,
@@ -195,15 +223,34 @@ export default class OrdersController {
     }
   }
 
-  // Обновление заметки курьера
-  static async updateCourierNote(orderId, courierNote) {
+
+  // Обновление курьера заказа
+  static async updateCourier(orderId, courierId) {
     try {
-      const { data } = await api.patch(`/mobile/orders/${orderId}/courier-note`, {
-        courier_note: courierNote
-      });
+      // Получаем текущий заказ, чтобы сохранить все остальные поля
+      const currentOrder = await this.getItem(orderId);
+      
+      // Обновляем только courier_id, сохраняя все остальные поля
+      const updateData = {
+        product: currentOrder.product,
+        name: currentOrder.name,
+        surname: currentOrder.surname,
+        patronymic: currentOrder.patronymic,
+        phone: currentOrder.phone,
+        address: currentOrder.address,
+        delivery_at: currentOrder.delivery_at,
+        delivered_at: currentOrder.deliveried_at,
+        order_status_id: currentOrder.order_status_id,
+        note: currentOrder.note,
+        declined_reason: currentOrder.declined_reason,
+        bank_id: currentOrder.bank_id,
+        courier_id: courierId
+      };
+      
+      const { data } = await api.put(`/orders/${orderId}`, updateData);
       return data;
     } catch (error) {
-      console.error('Ошибка при обновлении заметки курьера:', error);
+      console.error('Ошибка при обновлении курьера заказа:', error);
       throw error;
     }
   }

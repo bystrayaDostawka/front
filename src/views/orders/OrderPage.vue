@@ -121,7 +121,8 @@
 
         <AppModal :show="modalDialog" :onclose="closeModal">
             <OrderCreatePage ref="formComponent" @saved="handleSaved" @saved-error="handleSavedError"
-                @deleted="handleDeleted" @deleted-error="handleDeletedError" :editingItem="editingItem" />
+                @deleted="handleDeleted" @deleted-error="handleDeletedError" 
+                @notification="handleNotification" :editingItem="editingItem" />
         </AppModal>
         <AlertDialog :dialog="modalCloseDialog" @confirm="confirmModalClose" @leave="modalCloseDialog = false"
             descr="Вы действительно хотите закрыть? Несохранённые изменения будут потеряны." />
@@ -170,6 +171,7 @@ import { utils, writeFile } from 'xlsx';
 
 import ModalTableMixin from "@/mixins/ModalTableMixin";
 import StatusDropdown from "@/components/StatusDropdown.vue";
+import CourierDropdown from "@/components/CourierDropdown.vue";
 import api from '@/api/api';
 
 export default {
@@ -180,6 +182,7 @@ export default {
         NotificationToast,
         AlertDialog,
         ResizableTable,
+        CourierDropdown,
     },
     mixins: [ModalTableMixin],
     data() {
@@ -310,6 +313,15 @@ export default {
                 this.showNotification("Ошибка смены статуса", e.message || "", true);
             }
         },
+        async handleCourierChange(order, newCourierId) {
+            try {
+                await OrdersController.updateCourier(order.id, newCourierId);
+                this.fetchItems();
+                this.showNotification("Курьер обновлён", "", false);
+            } catch (e) {
+                this.showNotification("Ошибка смены курьера", e.message || "", true);
+            }
+        },
         async confirmStatusReason() {
             if (!this.statusReason) {
                 this.showNotification("Укажите причину отмены/переноса", "", true);
@@ -434,11 +446,15 @@ export default {
             this.fetchItems();
         },
         showModal(item, event) {
-            if (event && event.target && event.target.closest && event.target.closest('.status-dropdown')) {
+            if (event && event.target && event.target.closest && 
+                (event.target.closest('.status-dropdown') || event.target.closest('.courier-dropdown'))) {
                 return;
             }
             this.editingItem = item;
             this.modalDialog = true;
+        },
+        handleNotification({ title, message, isError }) {
+            this.showNotification(title, message, isError);
         },
     },
     computed: {
@@ -475,7 +491,17 @@ export default {
             ];
             if (this.user.role === 'admin' || this.user.role === 'manager') {
                 base.push({ name: "deliveried_at", label: "Доставлено в" });
-                base.push({ name: "courier", label: "Курьер" });
+                base.push({
+                    name: "courier",
+                    label: "Курьер",
+                    component: markRaw(CourierDropdown),
+                    props: (order) => ({
+                        orderId: order.id,
+                        value: order.courier_id || null,
+                        couriers: this.couriers,
+                        onChanged: (newCourierId) => this.handleCourierChange(order, newCourierId),
+                    }),
+                });
             }
             return base;
         },
