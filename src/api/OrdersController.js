@@ -20,6 +20,7 @@ export default class OrdersController {
             item.delivery_at,
             item.deliveried_at,
             item.note,
+            item.courier_note,
             item.declined_reason,
             item.bank_id,
             item.bank,
@@ -57,6 +58,7 @@ export default class OrdersController {
             item.delivery_at,
             item.deliveried_at,
             item.note,
+            item.courier_note,
             item.declined_reason,
             item.bank_id,
             item.bank,
@@ -89,6 +91,7 @@ export default class OrdersController {
         data.delivery_at,
         data.deliveried_at,
         data.note,
+        data.courier_note,
         data.declined_reason,
         data.bank_id,
         data.bank,
@@ -120,6 +123,7 @@ export default class OrdersController {
         data.delivery_at,
         data.deliveried_at,
         data.note,
+        data.courier_note,
         data.declined_reason,
         data.bank_id,
         data.bank,
@@ -187,6 +191,19 @@ export default class OrdersController {
       return data;
     } catch (error) {
       console.error('Ошибка при получении batch activity log заказов:', error);
+      throw error;
+    }
+  }
+
+  // Обновление заметки курьера
+  static async updateCourierNote(orderId, courierNote) {
+    try {
+      const { data } = await api.patch(`/mobile/orders/${orderId}/courier-note`, {
+        courier_note: courierNote
+      });
+      return data;
+    } catch (error) {
+      console.error('Ошибка при обновлении заметки курьера:', error);
       throw error;
     }
   }

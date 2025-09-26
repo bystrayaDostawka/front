@@ -10,6 +10,7 @@ export default class OrderDto {
     delivery_at,
     deliveried_at = "",
     note = "",
+    courier_note = "",
     declined_reason = "",
     bank_id = null,
     bank = null,
@@ -31,6 +32,7 @@ export default class OrderDto {
     this.delivery_at = delivery_at; // Дата планируемой доставки
     this.deliveried_at = deliveried_at; // Фактическая дата доставки
     this.note = note; // Примечание к заказу
+    this.courier_note = courier_note; // Заметка курьера к заказу
     this.declined_reason = declined_reason; // Причина отказа, если заказ отменён
 
     this.bank_id = bank_id; // ID банка

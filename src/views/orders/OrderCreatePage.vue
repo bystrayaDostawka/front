@@ -6,6 +6,16 @@
                 @click="activeTab = 'form'"
             >Форма</button>
             <button
+                v-if="editingItem"
+                :class="['tab', { active: activeTab === 'photos' }]"
+                @click="activeTab = 'photos'"
+            >Фотографии</button>
+            <button
+                v-if="editingItem"
+                :class="['tab', { active: activeTab === 'files' }]"
+                @click="activeTab = 'files'"
+            >Файлы</button>
+            <button
                 v-if="user.role !== 'bank' && user.role !== 'manager'"
                 :class="['tab', { active: activeTab === 'log' }]"
                 @click="activeTab = 'log'"
@@ -76,26 +86,27 @@
                     <label>Комментарий</label>
                     <textarea v-model="note" class="w-full border rounded px-3 py-2 resize-y min-h-[80px]" placeholder="Введите комментарий..."></textarea>
                 </div>
+                <div v-if="editingItem && user.role === 'courier'">
+                    <label>Заметка курьера</label>
+                    <textarea v-model="courier_note" class="w-full border rounded px-3 py-2 resize-y min-h-[80px]" placeholder="Введите заметку курьера..."></textarea>
+                </div>
             </div>
 
-            <!-- Фотографии заказа -->
-            <div v-if="editingItem" class="mt-6">
-                <OrderPhotos
-                    :order-id="editingItem.id"
-                    :can-upload="false"
-                    @error="showNotification"
-                />
-            </div>
-
-            <!-- Файлы заказа -->
-            <div v-if="editingItem" class="mt-6">
-                <OrderFiles
-                    :order-id="editingItem.id"
-                    :can-upload="canUploadFiles"
-                    :current-user="currentUser"
-                    @error="showNotification"
-                />
-            </div>
+        </div>
+        <div v-if="activeTab === 'photos'" class="p-4 flex-1 overflow-auto">
+            <OrderPhotos
+                :order-id="editingItem.id"
+                :can-upload="false"
+                @error="showNotification"
+            />
+        </div>
+        <div v-if="activeTab === 'files'" class="p-4 flex-1 overflow-auto">
+            <OrderFiles
+                :order-id="editingItem.id"
+                :can-upload="canUploadFiles"
+                :current-user="currentUser"
+                @error="showNotification"
+            />
         </div>
         <div v-if="activeTab === 'log'" class="p-4 flex-1 overflow-auto">
             <div v-if="logLoading">Загрузка...</div>
@@ -167,6 +178,7 @@ export default {
             courier_id: '',
             order_status_id: '',
             note: '',
+            courier_note: '',
             banks: [],
             couriers: [],
             statuses: [],
@@ -309,6 +321,7 @@ export default {
                 this.courier_id = '';
                 this.order_status_id = '';
                 this.note = '';
+                this.courier_note = '';
                 this.declined_reason = '';
             } else {
                 this.bank_id = item.bank_id || item.bank?.id || '';
@@ -324,6 +337,7 @@ export default {
                 this.courier_id = item.courier_id || item.courier?.id || '';
                 this.order_status_id = item.order_status_id || item.status?.id || '';
                 this.note = item.note || '';
+                this.courier_note = item.courier_note || '';
                 this.declined_reason = item.declined_reason || '';
             }
         },
@@ -340,6 +354,7 @@ export default {
             this.courier_id = '';
             this.order_status_id = '';
             this.note = '';
+            this.courier_note = '';
             this.declined_reason = '';
         },
 
@@ -356,6 +371,7 @@ export default {
                 courier_id: this.courier_id,
                 order_status_id: this.order_status_id,
                 note: this.note,
+                courier_note: this.courier_note,
             };
         },
 

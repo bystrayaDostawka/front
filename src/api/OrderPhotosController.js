@@ -7,10 +7,14 @@ export default {
     return response.data;
   },
 
-  // Загрузить фотографию (для курьеров)
-  async uploadPhoto(orderId, file) {
+  // Загрузить фотографии (для курьеров)
+  async uploadPhotos(orderId, files) {
     const formData = new FormData();
-    formData.append('photo', file);
+    
+    // Добавляем все файлы в FormData
+    files.forEach((file, index) => {
+      formData.append(`photos[${index}]`, file);
+    });
 
     const response = await api.post(`/mobile/orders/${orderId}/photos`, formData, {
       headers: {
@@ -18,6 +22,11 @@ export default {
       },
     });
     return response.data;
+  },
+
+  // Загрузить одну фотографию (для обратной совместимости)
+  async uploadPhoto(orderId, file) {
+    return this.uploadPhotos(orderId, [file]);
   },
 
   // Удалить фотографию (для курьеров)

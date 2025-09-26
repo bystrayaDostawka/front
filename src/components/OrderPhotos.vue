@@ -150,12 +150,16 @@ export default {
 
     async handleFileUpload(event) {
       const files = Array.from(event.target.files);
-
-      for (const file of files) {
-        if (this.validateFile(file)) {
-          await this.uploadPhoto(file);
-        }
+      
+      // Фильтруем валидные файлы
+      const validFiles = files.filter(file => this.validateFile(file));
+      
+      if (validFiles.length === 0) {
+        return;
       }
+
+      // Загружаем все файлы одним запросом
+      await this.uploadPhotos(validFiles);
 
       // Очищаем input
       event.target.value = '';
@@ -178,15 +182,25 @@ export default {
       return true;
     },
 
-    async uploadPhoto(file) {
+    async uploadPhotos(files) {
       try {
-        const newPhoto = await OrderPhotosController.uploadPhoto(this.orderId, file);
-        this.photos.unshift(newPhoto);
-        this.$emit('photo-uploaded', newPhoto);
+        const newPhotos = await OrderPhotosController.uploadPhotos(this.orderId, files);
+        
+        // Добавляем новые фотографии в начало списка
+        this.photos.unshift(...newPhotos);
+        
+        // Эмитим событие для каждой загруженной фотографии
+        newPhotos.forEach(photo => {
+          this.$emit('photo-uploaded', photo);
+        });
       } catch (error) {
-        console.error('Ошибка загрузки фотографии:', error);
-        this.$emit('error', 'Не удалось загрузить фотографию');
+        console.error('Ошибка загрузки фотографий:', error);
+        this.$emit('error', 'Не удалось загрузить фотографии');
       }
+    },
+
+    async uploadPhoto(file) {
+      return this.uploadPhotos([file]);
     },
 
     async deletePhoto(photoId) {
