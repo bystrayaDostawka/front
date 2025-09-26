@@ -221,7 +221,6 @@ export default {
             }
             return this.statuses;
         },
-<<<<<<< HEAD
         userBankName() {
             if (this.isBank && this.user.bank) {
                 return this.user.bank.name;
@@ -234,15 +233,14 @@ export default {
                 }
             }
             return '';
-=======
+        },
         canUploadFiles() {
             // Все пользователи кроме курьеров могут загружать файлы
             return this.user.role !== 'courier';
         },
         currentUser() {
             return this.user;
->>>>>>> 2cfebd692f1857645a949f3de868be7bbed20728
-        },
+        }
     },
     methods: {
         async loadDictionaries() {
@@ -274,7 +272,6 @@ export default {
                 this.logLoading = false;
             }
         },
-
         async save() {
             this.saveLoading = true;
             try {
@@ -323,11 +320,9 @@ export default {
                 this.saveLoading = false;
             }
         },
-
         async _deleteItemApi(id) {
             return api.delete(`/orders/${id}`);
         },
-
         setFormFromItem(item) {
             if (!item) {
                 this.bank_id = this.isBank ? this.user.bank_id : '';
@@ -361,7 +356,6 @@ export default {
                 this.declined_reason = item.declined_reason || '';
             }
         },
-
         clearForm() {
             this.bank_id = this.isBank ? this.user.bank_id : '';
             this.product = '';
@@ -376,7 +370,6 @@ export default {
             this.note = '';
             this.declined_reason = '';
         },
-
         _getFormState() {
             return {
                 bank_id: this.bank_id,
@@ -392,14 +385,13 @@ export default {
                 note: this.note,
             };
         },
-
         _getNowDateTimeLocal() {
             const now = new Date();
             const offset = now.getTimezoneOffset();
             const local = new Date(now.getTime() - offset * 60 * 1000);
             return local.toISOString().slice(0, 16);
-        },
-    },
+        }
+    }
 };
 </script>
 
