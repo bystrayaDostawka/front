@@ -1,6 +1,6 @@
 <template>
     <footer class="app-footer">
-        <span>© {{ new Date().getFullYear() }} Курьерская служба</span>
+        <span>© {{ new Date().getFullYear() }} ООО "Быстрая Доставка Гарант"</span>
     </footer>
 </template>
 

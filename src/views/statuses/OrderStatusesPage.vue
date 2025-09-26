@@ -1,5 +1,5 @@
 <template>
-    <div class="flex justify-between items-center">
+    <div class="flex justify-between items-center" v-if="canEdit">
         <PrimaryButton :onclick="() => { showModal(null) }" icon="fas fa-plus">
             Добавить статус
         </PrimaryButton>
@@ -8,14 +8,14 @@
     <transition name="fade" mode="out-in">
         <div v-if="!loading" key="table">
             <ResizableTable tableKey="order_statuses" :columnsConfig="columnsConfig" :tableData="statuses"
-                :itemMapper="itemMapper" :onRowClick="showModal" />
+                :itemMapper="itemMapper" :onRowClick="canEdit ? showModal : null" />
         </div>
         <div v-else key="loader" class="flex justify-center items-center h-64">
             <i class="fas fa-spinner fa-spin text-2xl"></i>
         </div>
     </transition>
 
-    <AppModal :show="modalDialog" :onclose="closeModal">
+    <AppModal v-if="canEdit" :show="modalDialog" :onclose="closeModal">
         <OrderStatusCreatePage ref="formComponent" @saved="handleSaved" @saved-error="handleSavedError"
             @deleted="handleDeleted" @deleted-error="handleDeletedError" :editingItem="editingItem" />
     </AppModal>
@@ -56,6 +56,12 @@ export default {
             ],
         };
     },
+    computed: {
+        canEdit() {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            return ['admin', 'manager'].includes(user.role);
+        },
+    },
     created() {
         this.fetchItems();
     },
@@ -69,6 +75,11 @@ export default {
             } finally {
                 this.loading = false;
             }
+        },
+        showModal(item) {
+            if (!this.canEdit) return;
+            this.editingItem = item;
+            this.modalDialog = true;
         },
         itemMapper(status, col) {
             if (col === 'color') return status.getFormattedColor();

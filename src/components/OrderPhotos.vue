@@ -2,7 +2,7 @@
   <div class="order-photos">
     <div class="photos-header">
       <h3 class="text-lg font-semibold text-gray-900 mb-4">
-        Фотографии посылки
+        Фотографии документов
         <span v-if="photos.length > 0" class="text-sm text-gray-500">
           ({{ photos.length }})
         </span>

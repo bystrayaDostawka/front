@@ -14,6 +14,12 @@
             Дашборд
           </router-link>
         </li>
+        <li v-if="canSee('bank')">
+          <router-link to="/bank-dashboard">
+            <i class="fas fa-chart-pie mr-2"></i>
+            Дашборд банка
+          </router-link>
+        </li>
         <li v-if="canSee('admin', 'manager')">
           <router-link to="/users">
             <i class="fas fa-users mr-2"></i>
@@ -26,7 +32,7 @@
             Банки
           </router-link>
         </li>
-        <li v-if="canSee('admin', 'manager')">
+        <li v-if="canSee('admin', 'manager', 'bank')">
           <router-link to="/order-statuses">
             <i class="fas fa-flag-checkered mr-2"></i>
             Статусы
@@ -42,7 +48,9 @@ export default {
   name: "AppSidebar",
   computed: {
     user() {
-      return JSON.parse(localStorage.getItem('user') || '{}');
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      console.log('AppSidebar - User data:', userData);
+      return userData;
     }
   },
   methods: {

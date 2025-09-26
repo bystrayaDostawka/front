@@ -25,12 +25,16 @@
         <div v-if="activeTab === 'form'" class="flex-1 overflow-auto p-4">
             <h2 class="text-lg font-bold mb-4">{{ editingItem ? 'Редактировать заявку' : 'Создать заявку' }}</h2>
             <div class="mb-4 space-y-3">
-                <div v-if="!isBank">
+                <div v-if="!isBank || !editingItem">
                     <label class="required">Банк</label>
-                    <select v-model="bank_id" required>
+                    <select v-model="bank_id" required :disabled="isBank && editingItem">
                         <option value="" disabled>Выберите банк...</option>
                         <option v-for="b in banks" :key="b.id" :value="b.id">{{ b.name }}</option>
                     </select>
+                </div>
+                <div v-else>
+                    <label>Банк</label>
+                    <input type="text" :value="userBankName" readonly class="bg-gray-100" />
                 </div>
                 <div>
                     <label class="required">Продукт</label>
@@ -60,9 +64,9 @@
                     <label class="required">Дата и время доставки</label>
                     <input type="datetime-local" v-model="delivery_at" required />
                 </div>
-                <div v-if="!isBank">
+                <div v-if="!isBank || !editingItem">
                     <label>Курьер</label>
-                    <select v-model="courier_id">
+                    <select v-model="courier_id" :disabled="isBank && editingItem">
                         <option value="" disabled>Без курьера</option>
                         <option v-for="c in couriers" :key="c.id" :value="c.id">{{ c.name }}</option>
                     </select>
@@ -138,7 +142,7 @@
             </div>
         </div>
         <div class="mt-4 flex space-x-2 bg-[#edf4fb] p-4 rounded-xl">
-            <PrimaryButton v-if="editingItem" :onclick="showDeleteDialog" :is-danger="true" :is-loading="deleteLoading"
+            <PrimaryButton v-if="editingItem && !isBank" :onclick="showDeleteDialog" :is-danger="true" :is-loading="deleteLoading"
                 icon="fas fa-remove">Удалить</PrimaryButton>
             <PrimaryButton icon="fas fa-save" :onclick="save" :is-loading="saveLoading">Сохранить</PrimaryButton>
         </div>
@@ -191,6 +195,10 @@ export default {
     emits: ['saved', 'saved-error', 'deleted', 'deleted-error'],
     mounted() {
         this.loadDictionaries();
+        // Для банковских пользователей устанавливаем их банк по умолчанию
+        if (this.isBank && this.user.bank_id) {
+            this.bank_id = this.user.bank_id;
+        }
     },
     watch: {
         activeTab(newTab) {
@@ -219,18 +227,33 @@ export default {
             return this.user.role === 'bank';
         },
         filteredStatuses() {
-            if (this.isBank) {
-                // Только статус "Отменено" (id=6)
+            if (this.isBank && this.editingItem) {
+                // При редактировании банковские пользователи могут менять только на "Отменено" (id=6)
                 return this.statuses.filter(s => Number(s.id) === 6);
             }
             return this.statuses;
         },
+<<<<<<< HEAD
+        userBankName() {
+            if (this.isBank && this.user.bank) {
+                return this.user.bank.name;
+            }
+            // Если нет объекта bank, но есть bank_id, попробуем найти банк в списке
+            if (this.isBank && this.user.bank_id && this.banks.length > 0) {
+                const bank = this.banks.find(b => b.id === this.user.bank_id);
+                if (bank) {
+                    return bank.name;
+                }
+            }
+            return '';
+=======
         canUploadFiles() {
             // Все пользователи кроме курьеров могут загружать файлы
             return this.user.role !== 'courier';
         },
         currentUser() {
             return this.user;
+>>>>>>> 2cfebd692f1857645a949f3de868be7bbed20728
         },
     },
     methods: {
@@ -244,6 +267,10 @@ export default {
                 this.banks = banks;
                 this.couriers = couriers;
                 this.statuses = statuses;
+                // После загрузки банков, если мы банковский пользователь, устанавливаем банк
+                if (this.isBank && this.user.bank_id) {
+                    this.bank_id = this.user.bank_id;
+                }
             } catch (error) {
                 console.error('Ошибка при загрузке справочников:', error);
             }
@@ -283,10 +310,15 @@ export default {
                     phone: this.phone,
                     address: this.address,
                     delivery_at: this.delivery_at,
-                    courier_id: this.courier_id,
                     note: this.note,
                     declined_reason: this.isTransferOrCancelled ? this.declined_reason : undefined,
                 };
+                
+                // Банковские пользователи не могут менять курьера при редактировании
+                if (!this.isBank || !this.editingItem) {
+                    payload.courier_id = this.courier_id;
+                }
+                
                 if (this.editingItem) {
                     payload.order_status_id = this.order_status_id;
                 }
@@ -310,7 +342,7 @@ export default {
 
         setFormFromItem(item) {
             if (!item) {
-                this.bank_id = '';
+                this.bank_id = this.isBank ? this.user.bank_id : '';
                 this.product = '';
                 this.surname = '';
                 this.name = '';
@@ -324,7 +356,8 @@ export default {
                 this.courier_note = '';
                 this.declined_reason = '';
             } else {
-                this.bank_id = item.bank_id || item.bank?.id || '';
+                // Для банковских пользователей при редактировании банк остается их банком
+                this.bank_id = this.isBank ? this.user.bank_id : (item.bank_id || item.bank?.id || '');
                 this.product = item.product || '';
                 this.surname = item.surname || '';
                 this.name = item.name || '';
@@ -334,7 +367,8 @@ export default {
                 this.delivery_at = item.delivery_at
                     ? item.delivery_at.slice(0, 16)
                     : this._getNowDateTimeLocal();
-                this.courier_id = item.courier_id || item.courier?.id || '';
+                // Банковские пользователи не могут менять курьера
+                this.courier_id = this.isBank ? '' : (item.courier_id || item.courier?.id || '');
                 this.order_status_id = item.order_status_id || item.status?.id || '';
                 this.note = item.note || '';
                 this.courier_note = item.courier_note || '';
@@ -343,7 +377,7 @@ export default {
         },
 
         clearForm() {
-            this.bank_id = '';
+            this.bank_id = this.isBank ? this.user.bank_id : '';
             this.product = '';
             this.surname = '';
             this.name = '';

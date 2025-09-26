@@ -76,6 +76,7 @@
                 <!-- Банковский ключ доступа -->
                 <div v-if="role === 'bank'">
                     <label class="required">Ключ доступа</label>
+                    <div class="text-xs text-gray-500 mb-1">Debug: bankAccessKey = "{{ bankAccessKey }}"</div>
                     <div class="relative flex items-center">
                         <input 
                             v-model="bankAccessKey" 
@@ -217,6 +218,22 @@ export default {
             if (newTab === 'log' && this.editingItem) {
                 this.loadActivityLog();
             }
+        },
+        editingItem: {
+            handler(newItem) {
+                if (newItem) {
+                    this.setFormFromItem(newItem);
+                } else {
+                    this.clearForm();
+                }
+            },
+            immediate: true
+        },
+        role(newRole) {
+            // При изменении роли на bank, если есть editingItem с банковским ключом, устанавливаем его
+            if (newRole === 'bank' && this.editingItem && this.editingItem.bank_access_key) {
+                this.bankAccessKey = this.editingItem.bank_access_key;
+            }
         }
     },
     emits: ['saved', 'saved-error', 'deleted', 'deleted-error'],
@@ -246,6 +263,12 @@ export default {
                 is_active: this.is_active,
             };
             if (this.password) payload.password = this.password;
+
+            // Добавляем банковский ключ для банковских пользователей
+            if (this.role === 'bank' && this.bankAccessKey) {
+                payload.bank_access_key = this.bankAccessKey;
+                payload.bank_key_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 дней
+            }
 
             try {
                 const saved = this.editingItem
@@ -358,6 +381,8 @@ export default {
                 const response = await UsersController.regenerateBankKey(this.editingItem.id);
                 this.editingItem.bank_access_key = response.bank_access_key;
                 this.editingItem.bank_key_expires_at = response.bank_key_expires_at;
+                // Обновляем поле ввода
+                this.bankAccessKey = response.bank_access_key;
                 this.$emit('saved', this.editingItem);
             } catch (e) {
                 this.$emit('saved-error', this.getApiErrorMessage(e));
@@ -369,9 +394,8 @@ export default {
         copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
                 // Можно добавить уведомление об успешном копировании
-                console.log('Ключ скопирован в буфер обмена');
             }).catch(err => {
-                console.error('Ошибка копирования:', err);
+                // Ошибка копирования
             });
         },
 

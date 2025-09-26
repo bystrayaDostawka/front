@@ -50,4 +50,14 @@ export default class StatisticsController {
       throw error;
     }
   }
+
+  static async getBankDashboardStats(params = {}) {
+    try {
+      const response = await api.get("/statistics/bank-dashboard", { params });
+      return response.data;
+    } catch (error) {
+      console.error("Ошибка при получении статистики банковского дашборда:", error);
+      throw error;
+    }
+  }
 } 
