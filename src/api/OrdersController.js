@@ -40,6 +40,38 @@ export default class OrdersController {
     }
   }
 
+  static async getItem(id) {
+    try {
+      const response = await api.get(`/orders/${id}`);
+      const item = response.data;
+      return new OrderDto(
+        item.id,
+        item.product,
+        item.name,
+        item.surname,
+        item.patronymic,
+        item.phone,
+        item.address,
+        item.delivery_at,
+        item.deliveried_at,
+        item.note,
+        item.declined_reason,
+        item.bank_id,
+        item.bank,
+        item.courier_id,
+        item.courier,
+        item.order_status_id,
+        item.status,
+        item.order_number,
+        item.created_at,
+        item.updated_at
+      );
+    } catch (error) {
+      console.error("Ошибка при получении заказа:", error);
+      throw error;
+    }
+  }
+
   static async search(term) {
     try {
       const response = await api.get(`/orders/search?search_request=${term}`);
@@ -187,6 +219,38 @@ export default class OrdersController {
       return data;
     } catch (error) {
       console.error('Ошибка при получении batch activity log заказов:', error);
+      throw error;
+    }
+  }
+
+
+  // Обновление курьера заказа
+  static async updateCourier(orderId, courierId) {
+    try {
+      // Получаем текущий заказ, чтобы сохранить все остальные поля
+      const currentOrder = await this.getItem(orderId);
+      
+      // Обновляем только courier_id, сохраняя все остальные поля
+      const updateData = {
+        product: currentOrder.product,
+        name: currentOrder.name,
+        surname: currentOrder.surname,
+        patronymic: currentOrder.patronymic,
+        phone: currentOrder.phone,
+        address: currentOrder.address,
+        delivery_at: currentOrder.delivery_at,
+        delivered_at: currentOrder.deliveried_at,
+        order_status_id: currentOrder.order_status_id,
+        note: currentOrder.note,
+        declined_reason: currentOrder.declined_reason,
+        bank_id: currentOrder.bank_id,
+        courier_id: courierId
+      };
+      
+      const { data } = await api.put(`/orders/${orderId}`, updateData);
+      return data;
+    } catch (error) {
+      console.error('Ошибка при обновлении курьера заказа:', error);
       throw error;
     }
   }

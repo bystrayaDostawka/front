@@ -6,6 +6,16 @@
                 @click="activeTab = 'form'"
             >Форма</button>
             <button
+                v-if="editingItem"
+                :class="['tab', { active: activeTab === 'photos' }]"
+                @click="activeTab = 'photos'"
+            >Фотографии</button>
+            <button
+                v-if="editingItem"
+                :class="['tab', { active: activeTab === 'files' }]"
+                @click="activeTab = 'files'"
+            >Файлы</button>
+            <button
                 v-if="user.role !== 'bank' && user.role !== 'manager'"
                 :class="['tab', { active: activeTab === 'log' }]"
                 @click="activeTab = 'log'"
@@ -82,24 +92,22 @@
                 </div>
             </div>
 
-            <!-- Фотографии заказа -->
-            <div v-if="editingItem" class="mt-6">
-                <OrderPhotos
-                    :order-id="editingItem.id"
-                    :can-upload="false"
-                    @error="showNotification"
-                />
-            </div>
-
-            <!-- Файлы заказа -->
-            <div v-if="editingItem" class="mt-6">
-                <OrderFiles
-                    :order-id="editingItem.id"
-                    :can-upload="canUploadFiles"
-                    :current-user="currentUser"
-                    @error="showNotification"
-                />
-            </div>
+        </div>
+        <div v-if="activeTab === 'photos'" class="p-4 flex-1 overflow-auto">
+            <OrderPhotos
+                :order-id="editingItem.id"
+                :can-upload="false"
+                :can-delete="canDeletePhotos"
+                @error="showNotification"
+            />
+        </div>
+        <div v-if="activeTab === 'files'" class="p-4 flex-1 overflow-auto">
+            <OrderFiles
+                :order-id="editingItem.id"
+                :can-upload="canUploadFiles"
+                :current-user="currentUser"
+                @error="showNotification"
+            />
         </div>
         <div v-if="activeTab === 'log'" class="p-4 flex-1 overflow-auto">
             <div v-if="logLoading">Загрузка...</div>
@@ -157,6 +165,7 @@ import FormModalMixin from '@/mixins/FormModalMixin';
 export default {
     components: { PrimaryButton, AlertDialog, OrderPhotos, OrderFiles },
     mixins: [FormModalMixin],
+    emits: ['saved', 'saved-error', 'deleted', 'deleted-error', 'notification'],
     props: { editingItem: { type: Object, default: null } },
     data() {
         return {
@@ -238,11 +247,19 @@ export default {
             // Все пользователи кроме курьеров могут загружать файлы
             return this.user.role !== 'courier';
         },
+        canDeletePhotos() {
+            // Админы и менеджеры могут удалять фотографии
+            return ['admin', 'manager'].includes(this.user.role);
+        },
         currentUser() {
             return this.user;
-        }
+        },
     },
     methods: {
+        showNotification(title, message, isError = false) {
+            // Эмитим событие для родительского компонента
+            this.$emit('notification', { title, message, isError });
+        },
         async loadDictionaries() {
             try {
                 const [banks, couriers, statuses] = await Promise.all([

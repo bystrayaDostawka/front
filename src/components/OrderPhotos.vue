@@ -51,9 +51,9 @@
           @click="openModal(photo)"
         />
 
-        <!-- Кнопка удаления (только для курьеров) -->
+        <!-- Кнопка удаления (для курьеров, админов и менеджеров) -->
         <button
-          v-if="canUpload"
+          v-if="canDelete"
           @click="deletePhoto(photo.id)"
           class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
         >
@@ -123,6 +123,10 @@ export default {
     canUpload: {
       type: Boolean,
       default: false
+    },
+    canDelete: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -150,12 +154,16 @@ export default {
 
     async handleFileUpload(event) {
       const files = Array.from(event.target.files);
-
-      for (const file of files) {
-        if (this.validateFile(file)) {
-          await this.uploadPhoto(file);
-        }
+      
+      // Фильтруем валидные файлы
+      const validFiles = files.filter(file => this.validateFile(file));
+      
+      if (validFiles.length === 0) {
+        return;
       }
+
+      // Загружаем все файлы одним запросом
+      await this.uploadPhotos(validFiles);
 
       // Очищаем input
       event.target.value = '';
@@ -178,24 +186,37 @@ export default {
       return true;
     },
 
-    async uploadPhoto(file) {
+    async uploadPhotos(files) {
       try {
-        const newPhoto = await OrderPhotosController.uploadPhoto(this.orderId, file);
-        this.photos.unshift(newPhoto);
-        this.$emit('photo-uploaded', newPhoto);
+        const newPhotos = await OrderPhotosController.uploadPhotos(this.orderId, files);
+        
+        // Добавляем новые фотографии в начало списка
+        this.photos.unshift(...newPhotos);
+        
+        // Эмитим событие для каждой загруженной фотографии
+        newPhotos.forEach(photo => {
+          this.$emit('photo-uploaded', photo);
+        });
       } catch (error) {
-        console.error('Ошибка загрузки фотографии:', error);
-        this.$emit('error', 'Не удалось загрузить фотографию');
+        console.error('Ошибка загрузки фотографий:', error);
+        this.$emit('error', 'Не удалось загрузить фотографии');
       }
     },
 
-    async deletePhoto(photoId) {
-      if (!confirm('Удалить фотографию?')) {
-        return;
-      }
+    async uploadPhoto(file) {
+      return this.uploadPhotos([file]);
+    },
 
+    async deletePhoto(photoId) {
       try {
-        await OrderPhotosController.deletePhoto(this.orderId, photoId);
+        // Определяем, какой API использовать в зависимости от роли пользователя
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (['admin', 'manager'].includes(user.role)) {
+          await OrderPhotosController.deletePhotoAdmin(this.orderId, photoId);
+        } else {
+          await OrderPhotosController.deletePhoto(this.orderId, photoId);
+        }
+        
         this.photos = this.photos.filter(photo => photo.id !== photoId);
         this.$emit('photo-deleted', photoId);
       } catch (error) {
