@@ -2,7 +2,7 @@
     <teleport to="body">
         <transition name="modal-slide">
             <div v-if="show" class="fixed inset-0 z-40 flex justify-end" @mousedown.self="tryClose" @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="handleTouchEnd">
-                <div class="bg-white rounded-l-xl shadow-lg relative w-full max-w-md h-full" @mousedown.stop>
+                <div class="bg-white rounded-l-xl shadow-lg relative w-full max-w-md md:max-w-2xl lg:max-w-4xl h-full" @mousedown.stop>
                     <button @click="tryClose"
                         class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl z-50" type="button">
                         &times;
@@ -55,39 +55,39 @@ export default {
             this.pendingClose = false;
             this.onclose();
         },
-        
+
         handleTouchStart(e) {
             this.touchStartX = e.touches[0].clientX;
             this.touchStartY = e.touches[0].clientY;
             this.isDragging = false;
         },
-        
+
         handleTouchMove(e) {
             if (!this.touchStartX || !this.touchStartY) return;
-            
+
             this.touchCurrentX = e.touches[0].clientX;
             this.touchCurrentY = e.touches[0].clientY;
-            
+
             const deltaX = this.touchCurrentX - this.touchStartX;
             const deltaY = this.touchCurrentY - this.touchStartY;
-            
+
             // Если движение вправо больше чем вниз/вверх, считаем это свайпом
             if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 50) {
                 this.isDragging = true;
                 e.preventDefault(); // Предотвращаем скролл страницы
             }
         },
-        
+
         handleTouchEnd(e) {
             if (!this.isDragging) return;
-            
+
             const deltaX = this.touchCurrentX - this.touchStartX;
-            
+
             // Если свайп вправо больше 100px, закрываем модалку
             if (deltaX > 100) {
                 this.tryClose();
             }
-            
+
             // Сбрасываем состояние
             this.touchStartX = 0;
             this.touchStartY = 0;
@@ -95,7 +95,7 @@ export default {
             this.touchCurrentY = 0;
             this.isDragging = false;
         },
-        
+
         handleKeydown(e) {
             if (e.key === 'Escape') {
                 this.tryClose();

@@ -103,7 +103,7 @@
     </div>
 
     <!-- Индикатор загрузки -->
-    <div v-if="loading" class="text-center py-4">
+    <div v-if="loading && photos.length === 0" class="text-center py-4">
       <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       <p class="mt-2 text-sm text-gray-600">Загрузка...</p>
     </div>
@@ -137,27 +137,31 @@ export default {
     };
   },
   async mounted() {
+    console.log('OrderPhotos mounted, orderId:', this.orderId);
     await this.loadPhotos();
   },
   methods: {
     async loadPhotos() {
+      console.log('OrderPhotos loadPhotos start, loading:', this.loading, 'photos.length:', this.photos.length);
       this.loading = true;
       try {
         this.photos = await OrderPhotosController.getOrderPhotos(this.orderId);
+        console.log('OrderPhotos loadPhotos success, photos:', this.photos);
       } catch (error) {
         console.error('Ошибка загрузки фотографий:', error);
         this.$emit('error', 'Не удалось загрузить фотографии');
       } finally {
         this.loading = false;
+        console.log('OrderPhotos loadPhotos end, loading:', this.loading, 'photos.length:', this.photos.length);
       }
     },
 
     async handleFileUpload(event) {
       const files = Array.from(event.target.files);
-      
+
       // Фильтруем валидные файлы
       const validFiles = files.filter(file => this.validateFile(file));
-      
+
       if (validFiles.length === 0) {
         return;
       }
@@ -189,10 +193,10 @@ export default {
     async uploadPhotos(files) {
       try {
         const newPhotos = await OrderPhotosController.uploadPhotos(this.orderId, files);
-        
+
         // Добавляем новые фотографии в начало списка
         this.photos.unshift(...newPhotos);
-        
+
         // Эмитим событие для каждой загруженной фотографии
         newPhotos.forEach(photo => {
           this.$emit('photo-uploaded', photo);
@@ -216,7 +220,7 @@ export default {
         } else {
           await OrderPhotosController.deletePhoto(this.orderId, photoId);
         }
-        
+
         this.photos = this.photos.filter(photo => photo.id !== photoId);
         this.$emit('photo-deleted', photoId);
       } catch (error) {

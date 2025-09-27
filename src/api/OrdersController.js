@@ -254,4 +254,45 @@ export default class OrdersController {
       throw error;
     }
   }
+
+  // Методы для работы с комментариями заказов
+  async getOrderComments(orderId) {
+    try {
+      const { data } = await api.get(`/orders/${orderId}/comments`);
+      return data;
+    } catch (error) {
+      console.error('Ошибка при получении комментариев заказа:', error);
+      throw error;
+    }
+  }
+
+  async createOrderComment(orderId, commentData) {
+    try {
+      const { data } = await api.post(`/orders/${orderId}/comments`, commentData);
+      return data;
+    } catch (error) {
+      console.error('Ошибка при создании комментария:', error);
+      throw error;
+    }
+  }
+
+  async updateOrderComment(orderId, commentId, updateData) {
+    try {
+      const { data } = await api.patch(`/orders/${orderId}/comments/${commentId}`, updateData);
+      return data;
+    } catch (error) {
+      console.error('Ошибка при обновлении комментария:', error);
+      throw error;
+    }
+  }
+
+  async deleteOrderComment(orderId, commentId) {
+    try {
+      const { data } = await api.delete(`/orders/${orderId}/comments/${commentId}`);
+      return data;
+    } catch (error) {
+      console.error('Ошибка при удалении комментария:', error);
+      throw error;
+    }
+  }
 }

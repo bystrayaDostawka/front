@@ -1,29 +1,36 @@
 <template>
     <div class="flex flex-col h-full overflow-hidden">
-        <div class="tabs mb-4">
-            <button
-                :class="['tab', { active: activeTab === 'form' }]"
-                @click="activeTab = 'form'"
-            >Форма</button>
-            <button
-                v-if="editingItem"
-                :class="['tab', { active: activeTab === 'photos' }]"
-                @click="activeTab = 'photos'"
-            >Фотографии</button>
-            <button
-                v-if="editingItem"
-                :class="['tab', { active: activeTab === 'files' }]"
-                @click="activeTab = 'files'"
-            >Файлы</button>
-            <button
-                v-if="user.role !== 'bank' && user.role !== 'manager'"
-                :class="['tab', { active: activeTab === 'log' }]"
-                @click="activeTab = 'log'"
-                :disabled="!editingItem"
-            >Лог</button>
+        <div class="p-4 border-b">
+            <h2 class="text-lg font-bold mb-4">{{ editingItem ? 'Редактировать заявку' : 'Создать заявку' }}</h2>
+            <div class="tabs">
+                <button
+                    :class="['tab', { active: activeTab === 'form' }]"
+                    @click="activeTab = 'form'"
+                >Форма</button>
+                <button
+                    v-if="editingItem"
+                    :class="['tab', { active: activeTab === 'photos' }]"
+                    @click="activeTab = 'photos'"
+                >Фотографии</button>
+                <button
+                    v-if="editingItem"
+                    :class="['tab', { active: activeTab === 'files' }]"
+                    @click="activeTab = 'files'"
+                >Файлы</button>
+                <button
+                    v-if="editingItem"
+                    :class="['tab', { active: activeTab === 'comments' }]"
+                    @click="activeTab = 'comments'"
+                >Комментарии</button>
+                <button
+                    v-if="user.role !== 'bank' && user.role !== 'manager'"
+                    :class="['tab', { active: activeTab === 'log' }]"
+                    @click="activeTab = 'log'"
+                    :disabled="!editingItem"
+                >Лог</button>
+            </div>
         </div>
         <div v-if="activeTab === 'form'" class="flex-1 overflow-auto p-4">
-            <h2 class="text-lg font-bold mb-4">{{ editingItem ? 'Редактировать заявку' : 'Создать заявку' }}</h2>
             <div class="mb-4 space-y-3">
                 <div v-if="!isBank || !editingItem">
                     <label class="required">Банк</label>
@@ -109,6 +116,11 @@
                 @error="showNotification"
             />
         </div>
+        <div v-if="activeTab === 'comments'" class="p-4 flex-1 overflow-auto">
+            <OrderComments
+                :order-id="editingItem.id"
+            />
+        </div>
         <div v-if="activeTab === 'log'" class="p-4 flex-1 overflow-auto">
             <div v-if="logLoading">Загрузка...</div>
             <div v-else-if="activityLog.length === 0">Нет записей</div>
@@ -153,6 +165,7 @@ import PrimaryButton from '@/components/PrimaryButton.vue';
 import AlertDialog from '@/components/AlertDialog.vue';
 import OrderPhotos from '@/components/OrderPhotos.vue';
 import OrderFiles from '@/components/OrderFiles.vue';
+import OrderComments from '@/components/OrderComments.vue';
 
 import BanksController from '@/api/BanksController';
 import UsersController from '@/api/UsersController';
@@ -163,7 +176,7 @@ import api from '@/api/api';
 import FormModalMixin from '@/mixins/FormModalMixin';
 
 export default {
-    components: { PrimaryButton, AlertDialog, OrderPhotos, OrderFiles },
+    components: { PrimaryButton, AlertDialog, OrderPhotos, OrderFiles, OrderComments },
     mixins: [FormModalMixin],
     emits: ['saved', 'saved-error', 'deleted', 'deleted-error', 'notification'],
     props: { editingItem: { type: Object, default: null } },
@@ -199,6 +212,7 @@ export default {
     },
     watch: {
         activeTab(newTab) {
+            console.log('OrderCreatePage activeTab changed to:', newTab);
             if (newTab === 'log' && this.editingItem) {
                 this.loadActivityLog();
             }
@@ -316,12 +330,12 @@ export default {
                     note: this.note,
                     declined_reason: this.isTransferOrCancelled ? this.declined_reason : undefined,
                 };
-                
+
                 // Банковские пользователи не могут менять курьера при редактировании
                 if (!this.isBank || !this.editingItem) {
                     payload.courier_id = this.courier_id;
                 }
-                
+
                 if (this.editingItem) {
                     payload.order_status_id = this.order_status_id;
                 }
@@ -421,23 +435,46 @@ export default {
 <style scoped>
 .tabs {
   display: flex;
-  gap: 8px;
+  gap: 2px;
+  background: #f1f5f9;
+  padding: 2px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 .tab {
-  padding: 6px 16px;
+  padding: 6px 12px;
   border: none;
-  background: #f3f4f6;
+  background: transparent;
   cursor: pointer;
-  border-radius: 6px 6px 0 0;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 13px;
+  color: #64748b;
+  transition: all 0.2s ease;
+  position: relative;
+  white-space: nowrap;
+}
+.tab:hover {
+  background: #e2e8f0;
+  color: #475569;
 }
 .tab.active {
-  background: #fff;
-  border-bottom: 2px solid #3b82f6;
-  font-weight: bold;
+  background: #3b82f6;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);
+}
+.tab.active:hover {
+  background: #2563eb;
 }
 .tab:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  background: transparent;
+}
+.tab:disabled:hover {
+  background: transparent;
+  color: #64748b;
 }
 
 .timeline {
