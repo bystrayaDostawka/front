@@ -97,7 +97,7 @@
     </div>
 
     <!-- Индикатор загрузки -->
-    <div v-if="loading" class="text-center py-4">
+    <div v-if="loading && files.length === 0" class="text-center py-4">
       <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       <p class="mt-2 text-sm text-gray-600">Загрузка...</p>
     </div>
@@ -131,31 +131,35 @@ export default {
     };
   },
   async mounted() {
+    console.log('OrderFiles mounted, orderId:', this.orderId);
     await this.loadFiles();
   },
   methods: {
     // ЗАГРУЗКА ФАЙЛОВ
     async loadFiles() {
+      console.log('OrderFiles loadFiles start, loading:', this.loading, 'files.length:', this.files.length);
       this.loading = true;
       try {
         this.files = await OrderFilesController.getOrderFiles(this.orderId);
+        console.log('OrderFiles loadFiles success, files:', this.files);
       } catch (error) {
         console.error('Ошибка загрузки файлов:', error);
         this.$emit('error', 'Не удалось загрузить файлы');
       } finally {
         this.loading = false;
+        console.log('OrderFiles loadFiles end, loading:', this.loading, 'files.length:', this.files.length);
       }
     },
 
     // ОБРАБОТКА ЗАГРУЗКИ ФАЙЛОВ
     async handleFileUpload(event) {
       const files = Array.from(event.target.files);
-      
+
       if (files.length === 0) return;
 
       // Валидация файлов
       const validFiles = files.filter(file => this.validateFile(file));
-      
+
       if (validFiles.length === 0) return;
 
       // Загружаем файлы сразу
@@ -213,7 +217,7 @@ export default {
     async downloadFile(file) {
       try {
         const response = await OrderFilesController.downloadFile(this.orderId, file.id);
-        
+
         // Создаем ссылку для скачивания
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
