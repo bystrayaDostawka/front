@@ -18,7 +18,7 @@
                     @click="activeTab = 'files'"
                 >Файлы</button>
                 <button
-                    v-if="editingItem"
+                    v-if="editingItem && user.role !== 'bank'"
                     :class="['tab', { active: activeTab === 'comments' }]"
                     @click="activeTab = 'comments'"
                 >Комментарии</button>
@@ -69,7 +69,56 @@
                 </div>
                 <div>
                     <label class="required">Дата и время доставки</label>
-                    <input type="datetime-local" v-model="delivery_at" required />
+                    
+                    <!-- Выбор даты -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Дата доставки</label>
+                        <input 
+                            type="date" 
+                            v-model="delivery_date" 
+                            :min="minDate"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required 
+                        />
+                    </div>
+                    
+                    <!-- Временные слоты -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Выберите время доставки</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div 
+                                v-for="slot in timeSlots" 
+                                :key="slot.value"
+                                :class="[
+                                    'border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md',
+                                    delivery_time_range === slot.value 
+                                        ? 'border-blue-500 bg-blue-50 shadow-md' 
+                                        : 'border-gray-200 hover:border-blue-300'
+                                ]"
+                                @click="selectTimeSlot(slot.value)"
+                            >
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="font-semibold text-gray-900">{{ slot.label }}</div>
+                                        <div class="text-sm text-gray-600">{{ slot.description }}</div>
+                                    </div>
+                                    <div v-if="delivery_time_range === slot.value" class="text-blue-500">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Показываем выбранное время -->
+                    <div v-if="delivery_date && delivery_time_range" class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fas fa-calendar-check text-green-600 mr-2"></i>
+                            <span class="text-green-800 font-medium">
+                                Выбрано: {{ formatDeliveryDate }} - {{ getTimeSlotLabel(delivery_time_range) }}
+                            </span>
+                        </div>
+                    </div>
                 </div>
                 <div v-if="!isBank || !editingItem">
                     <label>Курьер</label>
@@ -94,8 +143,8 @@
                     <input type="datetime-local" v-model="delivery_at" required />
                 </div>
                 <div>
-                    <label>Комментарий</label>
-                    <textarea v-model="note" class="w-full border rounded px-3 py-2 resize-y min-h-[80px]" placeholder="Введите комментарий..."></textarea>
+                    <label>Примечание</label>
+                    <textarea v-model="note" class="w-full border rounded px-3 py-2 resize-y min-h-[80px]" placeholder="Введите примечание..."></textarea>
                 </div>
             </div>
 
@@ -190,6 +239,8 @@ export default {
             phone: '',
             address: '',
             delivery_at: '',
+            delivery_date: '',
+            delivery_time_range: '',
             courier_id: '',
             order_status_id: '',
             note: '',
@@ -268,6 +319,28 @@ export default {
         currentUser() {
             return this.user;
         },
+        timeSlots() {
+            return [
+                { value: '10-14', label: '10:00 - 14:00', description: 'Утренняя доставка' },
+                { value: '12-16', label: '12:00 - 16:00', description: 'Дневная доставка' },
+                { value: '14-18', label: '14:00 - 18:00', description: 'Послеобеденная доставка' },
+                { value: '16-20', label: '16:00 - 20:00', description: 'Вечерняя доставка' }
+            ];
+        },
+        minDate() {
+            // Минимальная дата - сегодня
+            return new Date().toISOString().split('T')[0];
+        },
+        formatDeliveryDate() {
+            if (!this.delivery_date) return '';
+            const date = new Date(this.delivery_date);
+            return date.toLocaleDateString('ru-RU', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
     },
     methods: {
         showNotification(title, message, isError = false) {
@@ -306,6 +379,18 @@ export default {
         async save() {
             this.saveLoading = true;
             try {
+                // Валидация даты и времени доставки
+                if (!this.delivery_date) {
+                    this.$emit('saved-error', 'Дата доставки обязательна');
+                    this.saveLoading = false;
+                    return;
+                }
+                if (!this.delivery_time_range) {
+                    this.$emit('saved-error', 'Время доставки обязательно');
+                    this.saveLoading = false;
+                    return;
+                }
+                
                 // Валидация для Перенос и Отмена
                 if (this.isTransferOrCancelled && !this.declined_reason) {
                     this.$emit('saved-error', 'Причина отмены обязательна для выбранного статуса');
@@ -326,6 +411,7 @@ export default {
                     phone: this.phone,
                     address: this.address,
                     delivery_at: this.delivery_at,
+                    delivery_time_range: this.delivery_time_range,
                     note: this.note,
                     declined_reason: this.isTransferOrCancelled ? this.declined_reason : undefined,
                 };
@@ -380,6 +466,13 @@ export default {
                 this.delivery_at = item.delivery_at
                     ? item.delivery_at.slice(0, 16)
                     : this._getNowDateTimeLocal();
+                // Загружаем временной диапазон из БД или парсим из delivery_at
+                this.delivery_time_range = item.delivery_time_range || '';
+                this.delivery_date = item.delivery_date || '';
+                // Парсим дату и время для новых полей если не загружены из БД
+                if (!this.delivery_time_range || !this.delivery_date) {
+                    this.parseDeliveryDateTime();
+                }
                 // Банковские пользователи не могут менять курьера
                 this.courier_id = this.isBank ? '' : (item.courier_id || item.courier?.id || '');
                 this.order_status_id = item.order_status_id || item.status?.id || '';
@@ -396,6 +489,8 @@ export default {
             this.phone = '';
             this.address = '';
             this.delivery_at = '';
+            this.delivery_date = '';
+            this.delivery_time_range = '';
             this.courier_id = '';
             this.order_status_id = '';
             this.note = '';
@@ -421,8 +516,44 @@ export default {
             const offset = now.getTimezoneOffset();
             const local = new Date(now.getTime() - offset * 60 * 1000);
             return local.toISOString().slice(0, 16);
-        }
-    }
+        },
+
+        // Методы для работы с временными слотами
+        selectTimeSlot(timeRange) {
+            this.delivery_time_range = timeRange;
+            this.updateDeliveryDateTime();
+        },
+
+        updateDeliveryDateTime() {
+            if (this.delivery_date && this.delivery_time_range) {
+                const [startTime] = this.delivery_time_range.split('-');
+                this.delivery_at = `${this.delivery_date}T${startTime}:00`;
+            }
+        },
+
+        getTimeSlotLabel(timeRange) {
+            const slot = this.timeSlots.find(s => s.value === timeRange);
+            return slot ? slot.label : timeRange;
+        },
+
+        // Метод для парсинга существующей даты доставки
+        parseDeliveryDateTime() {
+            if (this.delivery_at) {
+                const dateTime = new Date(this.delivery_at);
+                this.delivery_date = dateTime.toISOString().split('T')[0];
+                
+                const hour = dateTime.getHours();
+                let timeRange = '';
+                
+                if (hour >= 10 && hour < 14) timeRange = '10-14';
+                else if (hour >= 12 && hour < 16) timeRange = '12-16';
+                else if (hour >= 14 && hour < 18) timeRange = '14-18';
+                else if (hour >= 16 && hour < 20) timeRange = '16-20';
+                
+                this.delivery_time_range = timeRange;
+            }
+        },
+    },
 };
 </script>
 
