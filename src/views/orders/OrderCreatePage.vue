@@ -13,7 +13,6 @@
                     @click="activeTab = 'photos'"
                 >Фотографии</button>
                 <button
-                    v-if="editingItem"
                     :class="['tab', { active: activeTab === 'files' }]"
                     @click="activeTab = 'files'"
                 >Файлы</button>
@@ -32,16 +31,12 @@
         </div>
         <div v-if="activeTab === 'form'" class="flex-1 overflow-auto p-4">
             <div class="mb-4 space-y-3">
-                <div v-if="!isBank || !editingItem">
+                <div v-if="!isBank">
                     <label class="required">Банк</label>
-                    <select v-model="bank_id" required :disabled="isBank && editingItem">
+                    <select v-model="bank_id" required>
                         <option value="" disabled>Выберите банк...</option>
                         <option v-for="b in banks" :key="b.id" :value="b.id">{{ b.name }}</option>
                     </select>
-                </div>
-                <div v-else>
-                    <label>Банк</label>
-                    <input type="text" :value="userBankName" readonly class="bg-gray-100" />
                 </div>
                 <div>
                     <label class="required">Продукт</label>
@@ -77,6 +72,7 @@
                             type="date" 
                             v-model="delivery_date" 
                             :min="minDate"
+                            @change="onDeliveryDateChange"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required 
                         />
@@ -120,16 +116,16 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="!isBank || !editingItem">
+                <div v-if="!isBank">
                     <label>Курьер</label>
-                    <select v-model="courier_id" :disabled="isBank && editingItem">
+                    <select v-model="courier_id">
                         <option value="" disabled>Без курьера</option>
                         <option v-for="c in couriers" :key="c.id" :value="c.id">{{ c.name }}</option>
                     </select>
                 </div>
                 <div v-if="showStatusSelect">
-                    <label class="required">Статус</label>
-                    <select v-model="order_status_id" required>
+                    <label>Статус</label>
+                    <select v-model="order_status_id">
                         <option value="" disabled>Выберите статус...</option>
                         <option v-for="s in filteredStatuses" :key="s.id" :value="s.id">{{ s.title }}</option>
                     </select>
@@ -158,12 +154,22 @@
             />
         </div>
         <div v-if="activeTab === 'files'" class="p-4 flex-1 overflow-auto">
-            <OrderFiles
-                :order-id="editingItem.id"
-                :can-upload="canUploadFiles"
-                :current-user="currentUser"
-                @error="showNotification"
-            />
+            <div v-if="editingItem">
+                <OrderFiles
+                    :order-id="editingItem.id"
+                    :can-upload="canUploadFiles"
+                    :current-user="currentUser"
+                    @error="showNotification"
+                />
+            </div>
+            <div v-else class="text-center py-8">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p class="mt-2 text-sm text-gray-500">
+                    Сначала сохраните заявку, чтобы загружать файлы
+                </p>
+            </div>
         </div>
         <div v-if="activeTab === 'comments'" class="p-4 flex-1 overflow-auto">
             <OrderComments
@@ -255,6 +261,12 @@ export default {
     },
     emits: ['saved', 'saved-error', 'deleted', 'deleted-error'],
     mounted() {
+        console.log('OrderCreatePage mounted:', {
+            editingItem: this.editingItem,
+            isBank: this.isBank,
+            user: this.user
+        });
+        
         this.loadDictionaries();
         // Для банковских пользователей устанавливаем их банк по умолчанию
         if (this.isBank && this.user.bank_id) {
@@ -262,11 +274,19 @@ export default {
         }
     },
     watch: {
-        activeTab(newTab) {
+        async activeTab(newTab) {
             console.log('OrderCreatePage activeTab changed to:', newTab);
             if (newTab === 'log' && this.editingItem) {
                 this.loadActivityLog();
             }
+        },
+        delivery_date(newDate) {
+            console.log('delivery_date changed to:', newDate);
+            this.updateDeliveryDateTime();
+        },
+        delivery_time_range(newTimeRange) {
+            console.log('delivery_time_range changed to:', newTimeRange);
+            this.updateDeliveryDateTime();
         }
     },
     computed: {
@@ -276,11 +296,28 @@ export default {
         isCancelled() {
             return Number(this.order_status_id) === 6;
         },
+        isCompleted() {
+            // Проверяем, является ли текущий статус заказа "Завершено" (id=4)
+            return this.editingItem && Number(this.editingItem.order_status_id) === 4;
+        },
         isTransferOrCancelled() {
             return this.isTransfer || this.isCancelled;
         },
         showStatusSelect() {
-            return this.editingItem !== null;
+            // Для банковских сотрудников статус виден только при редактировании
+            // и только если текущий статус не "Завершено"
+            const result = this.isBank 
+                ? (this.editingItem !== null && !this.isCompleted)
+                : (this.editingItem !== null);
+            
+            console.log('showStatusSelect:', {
+                isBank: this.isBank,
+                editingItem: this.editingItem,
+                isCompleted: this.isCompleted,
+                result: result
+            });
+            
+            return result;
         },
         user() {
             return JSON.parse(localStorage.getItem('user') || '{}');
@@ -291,7 +328,11 @@ export default {
         filteredStatuses() {
             if (this.isBank && this.editingItem) {
                 // При редактировании банковские пользователи могут менять только на "Отменено" (id=6)
-                return this.statuses.filter(s => Number(s.id) === 6);
+                // и только если текущий статус не "Завершено"
+                if (!this.isCompleted) {
+                    return this.statuses.filter(s => Number(s.id) === 6);
+                }
+                return [];
             }
             return this.statuses;
         },
@@ -402,6 +443,20 @@ export default {
                     this.saveLoading = false;
                     return;
                 }
+                // Формируем delivery_at из delivery_date и delivery_time_range
+                let delivery_at = this.delivery_at;
+                if (this.delivery_date && this.delivery_time_range && !delivery_at) {
+                    const [startTime] = this.delivery_time_range.split('-');
+                    delivery_at = `${this.delivery_date}T${startTime}:00`;
+                }
+
+                // Дополнительная валидация delivery_at
+                if (!delivery_at) {
+                    this.$emit('saved-error', 'Дата и время доставки обязательны');
+                    this.saveLoading = false;
+                    return;
+                }
+
                 const payload = {
                     bank_id: this.bank_id,
                     product: this.product,
@@ -410,14 +465,14 @@ export default {
                     patronymic: this.patronymic,
                     phone: this.phone,
                     address: this.address,
-                    delivery_at: this.delivery_at,
+                    delivery_at: delivery_at,
                     delivery_time_range: this.delivery_time_range,
                     note: this.note,
                     declined_reason: this.isTransferOrCancelled ? this.declined_reason : undefined,
                 };
 
-                // Банковские пользователи не могут менять курьера при редактировании
-                if (!this.isBank || !this.editingItem) {
+                // Банковские пользователи не могут назначать курьера
+                if (!this.isBank) {
                     payload.courier_id = this.courier_id;
                 }
 
@@ -425,6 +480,10 @@ export default {
                     payload.order_status_id = this.order_status_id;
                 }
 
+                console.log('OrderCreatePage save payload:', payload);
+                console.log('OrderCreatePage editingItem:', this.editingItem);
+                console.log('OrderCreatePage isBank:', this.isBank);
+                
                 const resp = this.editingItem
                     ? await api.put(`/orders/${this.editingItem.id}`, payload)
                     : await api.post(`/orders`, payload);
@@ -472,6 +531,9 @@ export default {
                 // Парсим дату и время для новых полей если не загружены из БД
                 if (!this.delivery_time_range || !this.delivery_date) {
                     this.parseDeliveryDateTime();
+                } else {
+                    // Если есть и дата и время, обновляем delivery_at
+                    this.updateDeliveryDateTime();
                 }
                 // Банковские пользователи не могут менять курьера
                 this.courier_id = this.isBank ? '' : (item.courier_id || item.courier?.id || '');
@@ -481,7 +543,10 @@ export default {
             }
         },
         clearForm() {
-            this.bank_id = this.isBank ? this.user.bank_id : '';
+            // Сохраняем bank_id для банковских пользователей
+            if (!this.isBank) {
+                this.bank_id = '';
+            }
             this.product = '';
             this.surname = '';
             this.name = '';
@@ -528,7 +593,19 @@ export default {
             if (this.delivery_date && this.delivery_time_range) {
                 const [startTime] = this.delivery_time_range.split('-');
                 this.delivery_at = `${this.delivery_date}T${startTime}:00`;
+                console.log('Updated delivery_at:', this.delivery_at, 'from date:', this.delivery_date, 'and time range:', this.delivery_time_range);
+                console.log('Available timeSlots:', this.timeSlots.map(s => s.value));
             }
+        },
+
+        // Метод для обновления времени при изменении даты
+        onDeliveryDateChange() {
+            this.updateDeliveryDateTime();
+        },
+
+        // Метод для обновления времени при изменении временного диапазона
+        onTimeRangeChange() {
+            this.updateDeliveryDateTime();
         },
 
         getTimeSlotLabel(timeRange) {
@@ -545,10 +622,17 @@ export default {
                 const hour = dateTime.getHours();
                 let timeRange = '';
                 
-                if (hour >= 10 && hour < 14) timeRange = '10-14';
-                else if (hour >= 12 && hour < 16) timeRange = '12-16';
-                else if (hour >= 14 && hour < 18) timeRange = '14-18';
+                // Обновленная логика для непересекающихся диапазонов
+                if (hour >= 10 && hour < 12) timeRange = '10-14';
+                else if (hour >= 12 && hour < 14) timeRange = '12-16';
+                else if (hour >= 14 && hour < 16) timeRange = '14-18';
                 else if (hour >= 16 && hour < 20) timeRange = '16-20';
+                
+                console.log('parseDeliveryDateTime:', {
+                    original_delivery_at: this.delivery_at,
+                    parsed_hour: hour,
+                    determined_timeRange: timeRange
+                });
                 
                 this.delivery_time_range = timeRange;
             }

@@ -39,5 +39,13 @@ export default {
   async deletePhotoAdmin(orderId, photoId) {
     const response = await api.delete(`/orders/${orderId}/photos/${photoId}`);
     return response.data;
+  },
+
+  // Скачать все фотографии в архиве
+  async downloadAll(orderId) {
+    const response = await api.get(`/orders/${orderId}/photos/download-all`, {
+      responseType: 'blob',
+    });
+    return response;
   }
 };

@@ -68,15 +68,15 @@
             </div>
             <div class="bg-white rounded-xl shadow p-4 md:p-6 flex flex-col items-center">
                 <span class="text-gray-500 mb-2 text-xs md:text-sm text-center">Выполнено</span>
-                <span class="text-2xl md:text-4xl font-bold text-green-600">{{ stats.completed_orders || 0 }}</span>
+                <span class="text-2xl md:text-4xl font-bold" style="color: #27AE60;">{{ stats.completed_orders || 0 }}</span>
             </div>
             <div class="bg-white rounded-xl shadow p-4 md:p-6 flex flex-col items-center">
                 <span class="text-gray-500 mb-2 text-xs md:text-sm text-center">В работе</span>
-                <span class="text-2xl md:text-4xl font-bold text-orange-600">{{ stats.pending_orders || 0 }}</span>
+                <span class="text-2xl md:text-4xl font-bold" style="color: #2F80ED;">{{ stats.pending_orders || 0 }}</span>
             </div>
             <div class="bg-white rounded-xl shadow p-4 md:p-6 flex flex-col items-center">
                 <span class="text-gray-500 mb-2 text-xs md:text-sm text-center">Отменено</span>
-                <span class="text-2xl md:text-4xl font-bold text-red-600">{{ stats.cancelled_orders || 0 }}</span>
+                <span class="text-2xl md:text-4xl font-bold" style="color: #EB5757;">{{ stats.cancelled_orders || 0 }}</span>
             </div>
         </div>
 
@@ -94,22 +94,30 @@
                         <div class="text-xs md:text-sm text-gray-500">Выполнено</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-lg md:text-2xl font-bold text-red-600">{{ stats.period_cancelled || 0 }}</div>
+                        <div class="text-lg md:text-2xl font-bold" style="color: #EB5757;">{{ stats.period_cancelled || 0 }}</div>
                         <div class="text-xs md:text-sm text-gray-500">Отменено</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-lg md:text-2xl font-bold text-yellow-600">{{ stats.postponed_orders || 0 }}</div>
+                        <div class="text-lg md:text-2xl font-bold" style="color: #F2C94C;">{{ stats.period_postponed || 0 }}</div>
                         <div class="text-xs md:text-sm text-gray-500">Перенос</div>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2 md:gap-4 mt-4">
                     <div class="text-center">
-                        <div class="text-sm md:text-xl font-bold text-purple-600">{{ stats.pending_verification || 0 }}</div>
+                        <div class="text-sm md:text-xl font-bold" style="color: #56CCF2;">{{ stats.status_stats?.new || 0 }}</div>
+                        <div class="text-xs md:text-sm text-gray-500">Новые</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-sm md:text-xl font-bold" style="color: #2F80ED;">{{ stats.period_in_work || 0 }}</div>
+                        <div class="text-xs md:text-sm text-gray-500">В работе</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-sm md:text-xl font-bold" style="color: #9B59B6;">{{ stats.period_pending_verification || 0 }}</div>
                         <div class="text-xs md:text-sm text-gray-500">Ждёт проверку</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-sm md:text-xl font-bold text-orange-600">{{ stats.in_work_orders || 0 }}</div>
-                        <div class="text-xs md:text-sm text-gray-500">В работе</div>
+                        <div class="text-sm md:text-xl font-bold" style="color: #EB5757;">{{ stats.period_cancelled || 0 }}</div>
+                        <div class="text-xs md:text-sm text-gray-500">Отменено</div>
                     </div>
                 </div>
             </div>
@@ -145,42 +153,29 @@
                 </div>
                 <div class="grid grid-cols-2 gap-2 md:gap-4 mt-4">
                     <div class="flex items-center">
-                        <div class="w-2 h-2 md:w-3 md:h-3 bg-green-500 rounded-full mr-1 md:mr-2"></div>
+                        <div class="w-2 h-2 md:w-3 md:h-3 rounded-full mr-1 md:mr-2" style="background-color: #27AE60;"></div>
                         <span class="text-xs md:text-sm">Выполнено</span>
                     </div>
                     <div class="flex items-center">
-                        <div class="w-2 h-2 md:w-3 md:h-3 bg-orange-500 rounded-full mr-1 md:mr-2"></div>
+                        <div class="w-2 h-2 md:w-3 md:h-3 rounded-full mr-1 md:mr-2" style="background-color: #56CCF2;"></div>
+                        <span class="text-xs md:text-sm">Новые</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-2 h-2 md:w-3 md:h-3 rounded-full mr-1 md:mr-2" style="background-color: #2F80ED;"></div>
                         <span class="text-xs md:text-sm">В работе</span>
                     </div>
                     <div class="flex items-center">
-                        <div class="w-2 h-2 md:w-3 md:h-3 bg-purple-500 rounded-full mr-1 md:mr-2"></div>
+                        <div class="w-2 h-2 md:w-3 md:h-3 rounded-full mr-1 md:mr-2" style="background-color: #9B59B6;"></div>
                         <span class="text-xs md:text-sm">Ждёт проверку</span>
                     </div>
                     <div class="flex items-center">
-                        <div class="w-2 h-2 md:w-3 md:h-3 bg-yellow-500 rounded-full mr-1 md:mr-2"></div>
+                        <div class="w-2 h-2 md:w-3 md:h-3 rounded-full mr-1 md:mr-2" style="background-color: #F2C94C;"></div>
                         <span class="text-xs md:text-sm">Перенос</span>
                     </div>
-                </div>
-            </div>
-
-            <!-- Статистика по курьерам -->
-            <div class="bg-white rounded-xl shadow p-4 md:p-6">
-                <h3 class="text-base md:text-lg font-semibold mb-4">Статистика по курьерам</h3>
-                <div v-if="stats.couriers_stats && stats.couriers_stats.length > 0" class="space-y-3">
-                    <div v-for="courier in stats.couriers_stats" :key="courier.id" class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <div>
-                            <div class="font-medium text-gray-800">{{ courier.name }}</div>
-                            <div class="text-sm text-gray-500">Всего заявок: {{ courier.total_orders }}</div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-lg font-bold text-green-600">{{ courier.completed_orders }}</div>
-                            <div class="text-xs text-gray-500">Выполнено</div>
-                        </div>
+                    <div class="flex items-center">
+                        <div class="w-2 h-2 md:w-3 md:h-3 rounded-full mr-1 md:mr-2" style="background-color: #EB5757;"></div>
+                        <span class="text-xs md:text-sm">Отменено</span>
                     </div>
-                </div>
-                <div v-else class="text-center text-gray-500 py-8">
-                    <i class="fas fa-user-tie text-4xl mb-2"></i>
-                    <p>Нет данных по курьерам</p>
                 </div>
             </div>
         </div>
@@ -233,15 +228,17 @@ export default {
     computed: {
         totalStatusOrders() {
             return (this.stats.period_completed || 0) +
-                   (this.stats.in_work_orders || 0) +
-                   (this.stats.pending_verification || 0) +
-                   (this.stats.postponed_orders || 0);
+                   (this.stats.status_stats?.new || 0) +
+                   (this.stats.period_in_work || 0) +
+                   (this.stats.period_pending_verification || 0) +
+                   (this.stats.period_postponed || 0) +
+                   (this.stats.period_cancelled || 0);
         },
         completionRate() {
             if (!this.stats.period_orders || this.stats.period_orders === 0) return 0;
             const activeOrders = this.stats.period_orders - (this.stats.period_cancelled || 0);
             if (activeOrders === 0) return 0;
-            return Math.round((this.stats.period_completed / activeOrders) * 100);
+            return Math.round(((this.stats.period_completed || 0) / activeOrders) * 100);
         },
         currentPeriodText() {
             const period = this.datePeriods.find(p => p.value === this.selectedDatePeriod);
@@ -292,19 +289,52 @@ export default {
                         completed_orders: 0,
                         pending_orders: 0,
                         cancelled_orders: 0,
+                        postponed_orders: 0,
                         period_orders: 0,
                         period_completed: 0,
                         period_cancelled: 0,
-                        postponed_orders: 0,
-                        pending_verification: 0,
-                        in_work_orders: 0,
-                        couriers_stats: [],
+                        period_postponed: 0,
+                        period_pending_verification: 0,
+                        period_in_work: 0,
+                        period_pending: 0,
+                        completion_rate: 0,
+                        status_stats: {
+                            new: 0,
+                            in_work: 0,
+                            pending_verification: 0,
+                            completed: 0,
+                            postponed: 0,
+                            cancelled: 0
+                        },
                         bank_name: 'Неизвестный банк'
                     };
                 }
             } catch (e) {
                 console.error('Error fetching bank stats:', e);
-                this.stats = {};
+                this.stats = {
+                    total_orders: 0,
+                    completed_orders: 0,
+                    pending_orders: 0,
+                    cancelled_orders: 0,
+                    postponed_orders: 0,
+                    period_orders: 0,
+                    period_completed: 0,
+                    period_cancelled: 0,
+                    period_postponed: 0,
+                    period_pending_verification: 0,
+                    period_in_work: 0,
+                    period_pending: 0,
+                    completion_rate: 0,
+                    status_stats: {
+                        new: 0,
+                        in_work: 0,
+                        pending_verification: 0,
+                        completed: 0,
+                        postponed: 0,
+                        cancelled: 0
+                    },
+                    bank_name: 'Ошибка загрузки'
+                };
             }
         },
 
@@ -342,15 +372,17 @@ export default {
             this.statusChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Выполнено', 'В работе', 'Ждёт проверку', 'Перенос'],
+                    labels: ['Выполнено', 'Новые', 'В работе', 'Ждёт проверку', 'Перенос', 'Отменено'],
                     datasets: [{
                         data: [
                             this.stats.period_completed || 0,
-                            this.stats.in_work_orders || 0,
-                            this.stats.pending_verification || 0,
-                            this.stats.postponed_orders || 0
+                            this.stats.status_stats?.new || 0,
+                            this.stats.period_in_work || 0,
+                            this.stats.period_pending_verification || 0,
+                            this.stats.period_postponed || 0,
+                            this.stats.period_cancelled || 0
                         ],
-                        backgroundColor: ['#10B981', '#F59E0B', '#8B5CF6', '#EAB308'],
+                        backgroundColor: ['#27AE60', '#56CCF2', '#2F80ED', '#9B59B6', '#F2C94C', '#EB5757'],
                         borderWidth: 0
                     }]
                 },
@@ -485,4 +517,5 @@ export default {
     }
 };
 </script>
+
 
