@@ -11,13 +11,25 @@ if (window.OneSignalDeferred) {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Получаем Player ID
-      const playerId = await OneSignal.User.pushSubscription.id;
+      const subscription = OneSignal.User.pushSubscription;
+      const playerId = subscription?.id;
 
       if (playerId) {
         console.log('📱 OneSignal Player ID:', playerId);
 
         // Отправляем Player ID на сервер
         await sendPlayerIdToServer(playerId);
+      } else {
+        console.log('⚠️ Player ID пока не доступен, OneSignal еще инициализируется');
+
+        // Ждем появления Player ID через observer
+        OneSignal.User.pushSubscription.addEventListener('change', async () => {
+          const newPlayerId = OneSignal.User.pushSubscription.id;
+          if (newPlayerId) {
+            console.log('📱 OneSignal Player ID получен:', newPlayerId);
+            await sendPlayerIdToServer(newPlayerId);
+          }
+        });
       }
     } catch (error) {
       console.error('❌ Ошибка получения Player ID:', error);
