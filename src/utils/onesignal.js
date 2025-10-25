@@ -4,38 +4,36 @@
  */
 
 // Инициализация OneSignal после загрузки
-if (window.OneSignalDeferred) {
-  window.OneSignalDeferred.push(async function(OneSignal) {
-    // Функция для получения и отправки Player ID
-    async function getAndSendPlayerId() {
-      try {
-        console.log('🔍 Пытаемся получить Player ID...');
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+window.OneSignalDeferred.push(async function(OneSignal) {
+  console.log('🚀 OneSignal SDK загружен');
 
-        // Получаем Player ID из pushSubscription
-        const subscription = OneSignal.User?.pushSubscription;
-        console.log('📊 Subscription:', subscription);
+  // Функция для получения и отправки Player ID
+  async function getAndSendPlayerId() {
+    try {
+      console.log('🔍 Пытаемся получить Player ID...');
 
-        const playerId = subscription?.id;
-        console.log('🆔 Player ID:', playerId);
+      // Получаем Player ID через getUserId
+      const playerId = await OneSignal.getUserId();
+      console.log('🆔 Player ID:', playerId);
 
-        if (playerId) {
-          console.log('📱 OneSignal Player ID получен:', playerId);
-          await sendPlayerIdToServer(playerId);
-        } else {
-          console.log('⚠️ Player ID не доступен, повтор через 3 секунды...');
-          setTimeout(getAndSendPlayerId, 3000);
-        }
-      } catch (error) {
-        console.error('❌ Ошибка получения Player ID:', error);
+      if (playerId) {
+        console.log('📱 OneSignal Player ID получен:', playerId);
+        await sendPlayerIdToServer(playerId);
+      } else {
+        console.log('⚠️ Player ID не доступен, повтор через 3 секунды...');
+        setTimeout(getAndSendPlayerId, 3000);
       }
+    } catch (error) {
+      console.error('❌ Ошибка получения Player ID:', error);
     }
+  }
 
-    // Ждем инициализации и пытаемся получить Player ID
-    setTimeout(() => {
-      getAndSendPlayerId();
-    }, 2000);
-  });
-}
+  // Ждем инициализации и пытаемся получить Player ID
+  setTimeout(() => {
+    getAndSendPlayerId();
+  }, 3000);
+});
 
 /**
  * Отправка Player ID на сервер
