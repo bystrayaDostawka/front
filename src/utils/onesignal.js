@@ -3,10 +3,13 @@
  * Отправляет Player ID на сервер для сохранения в БД
  */
 
-// Проверяем, что OneSignal загружен
-if (typeof OneSignal !== 'undefined') {
-  OneSignal.on('init', async () => {
+// Инициализация OneSignal после загрузки
+if (window.OneSignalDeferred) {
+  window.OneSignalDeferred.push(async function(OneSignal) {
     try {
+      // Ждем полной инициализации OneSignal
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       // Получаем Player ID
       const playerId = await OneSignal.getUserId();
 
