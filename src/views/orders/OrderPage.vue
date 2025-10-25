@@ -365,17 +365,7 @@ export default {
             // Иначе — обычная смена статуса
             try {
                 await OrdersController.changeStatus(order.id, newStatusId);
-
-                // Обновляем только эту строку без перезагрузки всей таблицы
-                const status = this.statuses.find(s => s.id === newStatusId);
-                if (status) {
-                    const index = this.data.data.findIndex(o => o.id === order.id);
-                    if (index !== -1) {
-                        this.data.data[index].order_status_id = newStatusId;
-                        this.previousOrderStatuses[order.id] = newStatusId;
-                    }
-                }
-
+                this.fetchItems();
                 this.showNotification("Статус обновлён", "", false);
             } catch (e) {
                 this.showNotification("Ошибка смены статуса", e.message || "", true);
@@ -384,21 +374,7 @@ export default {
         async handleCourierChange(order, newCourierId) {
             try {
                 await OrdersController.updateCourier(order.id, newCourierId);
-
-                // Обновляем только эту строку без перезагрузки всей таблицы
-                const index = this.data.data.findIndex(o => o.id === order.id);
-                if (index !== -1) {
-                    this.data.data[index].courier_id = newCourierId;
-                    if (newCourierId) {
-                        const courier = this.couriers.find(c => c.id === newCourierId);
-                        if (courier) {
-                            this.data.data[index].courier = courier;
-                        }
-                    } else {
-                        this.data.data[index].courier = null;
-                    }
-                }
-
+                this.fetchItems();
                 this.showNotification("Курьер обновлён", "", false);
             } catch (e) {
                 this.showNotification("Ошибка смены курьера", e.message || "", true);
@@ -423,17 +399,7 @@ export default {
                     }
                 );
                 this.showStatusReasonModal = false;
-
-                // Обновляем только эту строку без перезагрузки всей таблицы
-                const index = this.data.data.findIndex(o => o.id === this.statusChangeOrder.id);
-                if (index !== -1) {
-                    this.data.data[index].order_status_id = this.statusChangeId;
-                    if (this.statusNewDate) {
-                        this.data.data[index].delivery_at = this.statusNewDate;
-                    }
-                    this.previousOrderStatuses[this.statusChangeOrder.id] = this.statusChangeId;
-                }
-
+                this.fetchItems();
                 this.showNotification("Статус обновлён", "", false);
             } catch (e) {
                 this.showNotification("Ошибка смены статуса", e.message || "", true);
