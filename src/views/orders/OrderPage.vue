@@ -183,7 +183,6 @@ export default {
         NotificationToast,
         AlertDialog,
         ResizableTable,
-        CourierDropdown,
     },
     mixins: [ModalTableMixin],
     data() {
