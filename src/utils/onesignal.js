@@ -9,13 +9,21 @@ if (window.OneSignalDeferred) {
     // Функция для получения и отправки Player ID
     async function getAndSendPlayerId() {
       try {
+        console.log('🔍 Пытаемся получить Player ID...');
+
         // Получаем Player ID из pushSubscription
         const subscription = OneSignal.User?.pushSubscription;
+        console.log('📊 Subscription:', subscription);
+
         const playerId = subscription?.id;
+        console.log('🆔 Player ID:', playerId);
 
         if (playerId) {
-          console.log('📱 OneSignal Player ID:', playerId);
+          console.log('📱 OneSignal Player ID получен:', playerId);
           await sendPlayerIdToServer(playerId);
+        } else {
+          console.log('⚠️ Player ID не доступен, повтор через 3 секунды...');
+          setTimeout(getAndSendPlayerId, 3000);
         }
       } catch (error) {
         console.error('❌ Ошибка получения Player ID:', error);
