@@ -253,6 +253,7 @@ export default {
 
                 // Проверяем изменения статусов (только если уже были загружены данные)
                 if (this.data?.data && Object.keys(this.previousOrderStatuses).length > 0) {
+                    // Обновляем только измененные строки без полной перезагрузки
                     this.checkOrderStatusChanges(this.data.data, newData.data);
                 } else {
                     // Первая загрузка - сохраняем статусы без проверки
@@ -260,9 +261,8 @@ export default {
                     newData.data?.forEach(order => {
                         this.previousOrderStatuses[order.id] = order.order_status_id;
                     });
+                    this.data = newData;
                 }
-
-                this.data = newData;
                 await this.fetchDeliveryDateChanges();
             } catch (e) {
                 this.showNotification("Ошибка загрузки", e.message || "", true);
@@ -271,18 +271,27 @@ export default {
             }
         },
         checkOrderStatusChanges(oldOrders, newOrders) {
-            // Проверяем изменения
-            newOrders.forEach(order => {
-                const oldStatus = this.previousOrderStatuses[order.id];
-                const newStatus = order.order_status_id;
+            // Проверяем изменения и обновляем только измененные строки
+            newOrders.forEach(newOrder => {
+                const oldOrder = oldOrders.find(o => o.id === newOrder.id);
+                const oldStatus = this.previousOrderStatuses[newOrder.id];
+                const newStatus = newOrder.order_status_id;
 
                 if (oldStatus && oldStatus !== newStatus) {
                     // Статус изменился - показываем уведомление
                     const statusTitle = this.statuses.find(s => s.id === newStatus)?.title || 'неизвестен';
                     showBrowserNotification(
                         'Статус заявки изменен',
-                        `Заявка #${order.order_number}: ${statusTitle}`
+                        `Заявка #${newOrder.order_number}: ${statusTitle}`
                     );
+
+                    // Обновляем только эту строку в data
+                    if (oldOrder && this.data?.data) {
+                        const index = this.data.data.findIndex(o => o.id === newOrder.id);
+                        if (index !== -1) {
+                            this.data.data[index] = { ...this.data.data[index], ...newOrder };
+                        }
+                    }
                 }
             });
 
