@@ -10,9 +10,9 @@ if (window.OneSignalDeferred) {
     async function getAndSendPlayerId() {
       try {
         // Получаем Player ID из pushSubscription
-        const subscription = OneSignal.User.pushSubscription;
+        const subscription = OneSignal.User?.pushSubscription;
         const playerId = subscription?.id;
-        
+
         if (playerId) {
           console.log('📱 OneSignal Player ID:', playerId);
           await sendPlayerIdToServer(playerId);
@@ -21,14 +21,11 @@ if (window.OneSignalDeferred) {
         console.error('❌ Ошибка получения Player ID:', error);
       }
     }
-    
-    // Слушаем изменения подписки
-    OneSignal.User.pushSubscription.addEventListener('change', () => {
+
+    // Ждем инициализации и пытаемся получить Player ID
+    setTimeout(() => {
       getAndSendPlayerId();
-    });
-    
-    // Пытаемся получить Player ID сразу
-    getAndSendPlayerId();
+    }, 2000);
   });
 }
 
