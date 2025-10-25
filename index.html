@@ -8,6 +8,21 @@
     <meta name="description" content="Админка системы быстрой доставки">
     <meta name="keywords" content="доставка, курьер, админка, управление">
     <title>Быстрая доставка - Админка</title>
+    
+    <!-- OneSignal SDK для браузерных уведомлений -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "b4334469-2b6b-475f-aaa7-ccdf5a2a4a14",
+          safari_web_id: "web.onesignal.auto.215a98b6-2876-4938-a894-401760de5038",
+          notifyButton: {
+            enable: true,
+          },
+        });
+      });
+    </script>
   </head>
   <body>
     <div id="app"></div>

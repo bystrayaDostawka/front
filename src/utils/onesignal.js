@@ -1,0 +1,71 @@
+/**
+ * Утилита для работы с OneSignal в браузере
+ * Отправляет Player ID на сервер для сохранения в БД
+ */
+
+// Проверяем, что OneSignal загружен
+if (typeof OneSignal !== 'undefined') {
+  OneSignal.on('init', async () => {
+    try {
+      // Получаем Player ID
+      const playerId = await OneSignal.getUserId();
+
+      if (playerId) {
+        console.log('📱 OneSignal Player ID:', playerId);
+
+        // Отправляем Player ID на сервер
+        await sendPlayerIdToServer(playerId);
+      }
+    } catch (error) {
+      console.error('❌ Ошибка получения Player ID:', error);
+    }
+  });
+}
+
+/**
+ * Отправка Player ID на сервер
+ */
+async function sendPlayerIdToServer(playerId) {
+  try {
+    const token = localStorage.getItem('token'); // Получаем токен из localStorage
+
+    if (!token) {
+      console.log('⚠️ Токен не найден, пропускаем отправку Player ID');
+      return;
+    }
+
+    const response = await fetch('/api/mobile/push-token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ player_id: playerId }),
+    });
+
+    if (response.ok) {
+      console.log('✅ Player ID успешно отправлен на сервер');
+    } else {
+      console.error('❌ Ошибка отправки Player ID:', response.status);
+    }
+  } catch (error) {
+    console.error('❌ Ошибка отправки Player ID на сервер:', error);
+  }
+}
+
+/**
+ * Показать локальное уведомление в браузере
+ */
+function showBrowserNotification(title, message) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, {
+      body: message,
+      icon: '/logo.png',
+      badge: '/logo.png',
+    });
+  }
+}
+
+// Экспортируем функции для использования в компонентах
+export { sendPlayerIdToServer, showBrowserNotification };
+

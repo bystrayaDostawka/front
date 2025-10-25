@@ -121,7 +121,7 @@
 
         <AppModal :show="modalDialog" :onclose="closeModal">
             <OrderCreatePage ref="formComponent" @saved="handleSaved" @saved-error="handleSavedError"
-                @deleted="handleDeleted" @deleted-error="handleDeletedError" 
+                @deleted="handleDeleted" @deleted-error="handleDeletedError"
                 @notification="handleNotification" :editingItem="editingItem" />
         </AppModal>
         <AlertDialog :dialog="modalCloseDialog" @confirm="confirmModalClose" @leave="modalCloseDialog = false"
@@ -173,6 +173,7 @@ import ModalTableMixin from "@/mixins/ModalTableMixin";
 import StatusDropdown from "@/components/StatusDropdown.vue";
 import CourierDropdown from "@/components/CourierDropdown.vue";
 import api from '@/api/api';
+import { showBrowserNotification } from '@/utils/onesignal';
 
 export default {
     components: {
@@ -208,6 +209,8 @@ export default {
             importLoading: false,
             importErrors: [],
             showImportExample: false,
+            refreshInterval: null,
+            previousOrderStatuses: {}, // Хранит предыдущие статусы заявок
         };
     },
     created() {
@@ -215,6 +218,17 @@ export default {
         this.fetchCouriers();
         this.fetchItems();
         this.fetchStatuses();
+
+        // Автообновление списка заявок каждые 30 секунд (безопасный интервал)
+        this.refreshInterval = setInterval(() => {
+            this.fetchItems();
+        }, 30000);
+    },
+    beforeUnmount() {
+        // Очистка интервала при размонтировании компонента
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+        }
     },
     methods: {
         async fetchItems() {
@@ -235,13 +249,48 @@ export default {
                 } else if (this.filterDateType) {
                   params.delivery_at = this.filterDateType;
                 }
-                this.data = await OrdersController.getItems(params);
+                const newData = await OrdersController.getItems(params);
+
+                // Проверяем изменения статусов (только если уже были загружены данные)
+                if (this.data?.data && Object.keys(this.previousOrderStatuses).length > 0) {
+                    this.checkOrderStatusChanges(this.data.data, newData.data);
+                } else {
+                    // Первая загрузка - сохраняем статусы без проверки
+                    this.previousOrderStatuses = {};
+                    newData.data?.forEach(order => {
+                        this.previousOrderStatuses[order.id] = order.order_status_id;
+                    });
+                }
+
+                this.data = newData;
                 await this.fetchDeliveryDateChanges();
             } catch (e) {
                 this.showNotification("Ошибка загрузки", e.message || "", true);
             } finally {
                 this.loading = false;
             }
+        },
+        checkOrderStatusChanges(oldOrders, newOrders) {
+            // Проверяем изменения
+            newOrders.forEach(order => {
+                const oldStatus = this.previousOrderStatuses[order.id];
+                const newStatus = order.order_status_id;
+
+                if (oldStatus && oldStatus !== newStatus) {
+                    // Статус изменился - показываем уведомление
+                    const statusTitle = this.statuses.find(s => s.id === newStatus)?.title || 'неизвестен';
+                    showBrowserNotification(
+                        'Статус заявки изменен',
+                        `Заявка #${order.order_number}: ${statusTitle}`
+                    );
+                }
+            });
+
+            // Обновляем предыдущие статусы после проверки
+            this.previousOrderStatuses = {};
+            newOrders.forEach(order => {
+                this.previousOrderStatuses[order.id] = order.order_status_id;
+            });
         },
         async fetchStatuses() {
             try {
@@ -446,7 +495,7 @@ export default {
             this.fetchItems();
         },
         showModal(item, event) {
-            if (event && event.target && event.target.closest && 
+            if (event && event.target && event.target.closest &&
                 (event.target.closest('.status-dropdown') || event.target.closest('.courier-dropdown'))) {
                 return;
             }
