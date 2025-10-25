@@ -12,6 +12,8 @@ window.OneSignalDeferred.push(async function(OneSignal) {
   async function getAndSendPlayerId() {
     try {
       console.log('🔍 Пытаемся получить Player ID...');
+      console.log('📦 OneSignal объект:', OneSignal);
+      console.log('👤 OneSignal.User:', OneSignal.User);
 
       // Получаем Player ID напрямую через User API
       const userId = OneSignal.User?.primary?.id;
