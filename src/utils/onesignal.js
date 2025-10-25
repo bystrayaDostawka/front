@@ -11,7 +11,7 @@ if (window.OneSignalDeferred) {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Получаем Player ID
-      const playerId = await OneSignal.getUserId();
+      const playerId = await OneSignal.User.pushSubscription.id;
 
       if (playerId) {
         console.log('📱 OneSignal Player ID:', playerId);
