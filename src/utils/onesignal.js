@@ -6,6 +6,30 @@
 // Глобальная переменная для хранения функции показа уведомлений
 let notificationCallback = null;
 
+// Функция для сохранения уведомления в localStorage
+function saveNotification(notification) {
+  try {
+    const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+    notifications.unshift({
+      id: Date.now(),
+      title: notification.title || 'Уведомление',
+      message: notification.body || '',
+      data: notification.data || {},
+      read: false,
+      created_at: new Date().toISOString()
+    });
+
+    // Оставляем только последние 50 уведомлений
+    const limitedNotifications = notifications.slice(0, 50);
+    localStorage.setItem('notifications', JSON.stringify(limitedNotifications));
+
+    return limitedNotifications;
+  } catch (error) {
+    console.error('Ошибка сохранения уведомления:', error);
+    return [];
+  }
+}
+
 // Инициализация OneSignal после загрузки
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 window.OneSignalDeferred.push(async function(OneSignal) {
@@ -15,15 +39,29 @@ window.OneSignalDeferred.push(async function(OneSignal) {
   OneSignal.Notifications.addEventListener('click', (event) => {
     console.log('🔔 Уведомление кликнуто:', event);
 
+    const notification = event.notification;
+
+    // Сохраняем уведомление в localStorage
+    saveNotification(notification);
+
     // Если есть callback для показа Vue уведомления, вызываем его
     if (notificationCallback) {
-      const notification = event.notification;
       notificationCallback({
         title: notification.title || 'Уведомление',
         message: notification.body || '',
         data: notification.data || {}
       });
     }
+  });
+
+  // Обработчик получения уведомления в фоне
+  OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
+    console.log('📬 Получено уведомление (foreground):', event);
+
+    const notification = event.notification;
+
+    // Сохраняем уведомление в localStorage
+    saveNotification(notification);
   });
 
   // Функция для получения и отправки Player ID

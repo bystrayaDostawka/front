@@ -99,29 +99,24 @@ export default {
     },
     async fetchNotifications() {
       try {
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const token = localStorage.getItem('token');
-
-        if (!token) return;
-
-        // Получаем уведомления через API
-        const response = await fetch('/api/mobile/notifications', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          this.notifications = data.notifications || [];
+        // Читаем уведомления из localStorage
+        const storedNotifications = localStorage.getItem('notifications');
+        if (storedNotifications) {
+          this.notifications = JSON.parse(storedNotifications);
+        } else {
+          this.notifications = [];
         }
       } catch (error) {
         console.error('Ошибка загрузки уведомлений:', error);
+        this.notifications = [];
       }
     },
     handleNotificationClick(notification) {
       // Помечаем как прочитанное
       notification.read = true;
+
+      // Сохраняем изменения в localStorage
+      localStorage.setItem('notifications', JSON.stringify(this.notifications));
 
       // Если есть order_id, открываем детали заявки
       if (notification.data?.order_id) {
@@ -133,6 +128,9 @@ export default {
     },
     markAllAsRead() {
       this.notifications.forEach(n => n.read = true);
+
+      // Сохраняем изменения в localStorage
+      localStorage.setItem('notifications', JSON.stringify(this.notifications));
     },
     formatTime(dateString) {
       const date = new Date(dateString);
