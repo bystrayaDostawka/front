@@ -12,16 +12,16 @@ window.OneSignalDeferred.push(async function(OneSignal) {
   async function getAndSendPlayerId() {
     try {
       console.log('🔍 Пытаемся получить Player ID...');
-      console.log('📦 OneSignal объект:', OneSignal);
-      console.log('👤 OneSignal.User:', OneSignal.User);
 
-      // Получаем Player ID напрямую через User API
-      const userId = OneSignal.User?.primary?.id;
-      console.log('🆔 User ID:', userId);
+      // Получаем Player ID из PushSubscription
+      const subscription = OneSignal.User?.PushSubscription;
+      const playerId = subscription?.id;
 
-      if (userId) {
-        console.log('📱 OneSignal Player ID получен:', userId);
-        await sendPlayerIdToServer(userId);
+      console.log('🆔 Player ID:', playerId);
+
+      if (playerId) {
+        console.log('📱 OneSignal Player ID получен:', playerId);
+        await sendPlayerIdToServer(playerId);
       } else {
         console.log('⚠️ Player ID не доступен, повтор через 3 секунды...');
         setTimeout(getAndSendPlayerId, 3000);
