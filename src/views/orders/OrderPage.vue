@@ -61,6 +61,9 @@
                     Импорт из Excel
                 </PrimaryButton>
             </div>
+            <div class="flex items-center gap-2">
+                <NotificationBell />
+            </div>
             <input ref="importInput" type="file" accept=".xlsx,.xls" class="hidden" @change="handleImportFile" />
         </div>
         <div v-if="importErrors.length" class="import-errors">
@@ -172,8 +175,9 @@ import { utils, writeFile } from 'xlsx';
 import ModalTableMixin from "@/mixins/ModalTableMixin";
 import StatusDropdown from "@/components/StatusDropdown.vue";
 import CourierDropdown from "@/components/CourierDropdown.vue";
+import NotificationBell from "@/components/NotificationBell.vue";
 import api from '@/api/api';
-import { showBrowserNotification } from '@/utils/onesignal';
+import { showBrowserNotification, setNotificationCallback } from '@/utils/onesignal';
 
 export default {
     components: {
@@ -183,6 +187,7 @@ export default {
         NotificationToast,
         AlertDialog,
         ResizableTable,
+        NotificationBell,
     },
     mixins: [ModalTableMixin],
     data() {
@@ -217,6 +222,11 @@ export default {
         this.fetchCouriers();
         this.fetchItems();
         this.fetchStatuses();
+
+        // Устанавливаем callback для показа Vue уведомлений при получении push
+        setNotificationCallback((notification) => {
+            this.showNotification(notification.title, notification.message, false);
+        });
 
         // Автообновление списка заявок каждые 30 секунд (безопасный интервал)
         this.refreshInterval = setInterval(() => {

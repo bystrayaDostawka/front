@@ -3,10 +3,28 @@
  * Отправляет Player ID на сервер для сохранения в БД
  */
 
+// Глобальная переменная для хранения функции показа уведомлений
+let notificationCallback = null;
+
 // Инициализация OneSignal после загрузки
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 window.OneSignalDeferred.push(async function(OneSignal) {
   console.log('🚀 OneSignal SDK загружен');
+
+  // Обработчик входящих уведомлений
+  OneSignal.Notifications.addEventListener('click', (event) => {
+    console.log('🔔 Уведомление кликнуто:', event);
+
+    // Если есть callback для показа Vue уведомления, вызываем его
+    if (notificationCallback) {
+      const notification = event.notification;
+      notificationCallback({
+        title: notification.title || 'Уведомление',
+        message: notification.body || '',
+        data: notification.data || {}
+      });
+    }
+  });
 
   // Функция для получения и отправки Player ID
   async function getAndSendPlayerId() {
@@ -36,6 +54,11 @@ window.OneSignalDeferred.push(async function(OneSignal) {
     getAndSendPlayerId();
   }, 3000);
 });
+
+// Функция для установки callback уведомлений
+function setNotificationCallback(callback) {
+  notificationCallback = callback;
+}
 
 /**
  * Отправка Player ID на сервер
@@ -82,5 +105,5 @@ function showBrowserNotification(title, message) {
 }
 
 // Экспортируем функции для использования в компонентах
-export { sendPlayerIdToServer, showBrowserNotification };
+export { sendPlayerIdToServer, showBrowserNotification, setNotificationCallback };
 
