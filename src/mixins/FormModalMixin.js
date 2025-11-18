@@ -14,8 +14,10 @@ export default {
   watch: {
     editingItem: {
       immediate: true,
-      handler() {
-        this.setFormFromItem?.(this.editingItem);
+      async handler() {
+        if (this.setFormFromItem) {
+          await this.setFormFromItem(this.editingItem);
+        }
         this.$nextTick(() => {
           this.initialState = this._getFormState?.() || {};
         });
