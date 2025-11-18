@@ -6,7 +6,6 @@ import UserPage from "../views/users/UserPage.vue";
 import OrderStatusesPage from "../views/statuses/OrderStatusesPage.vue";
 import BankPage from "../views/banks/BankPage.vue";
 import OrderPage from "@/views/orders/OrderPage.vue";
-import AgentReportsPage from "@/views/agent-reports/AgentReportsPage.vue";
 
 const routes = [
   { path: "/login", component: Login },
@@ -17,7 +16,6 @@ const routes = [
   { path: "/orders", component: OrderPage, meta: { requiresAuth: true, roles: ['admin', 'manager', 'bank'] } },
   { path: "/banks", component: BankPage, meta: { requiresAuth: true, roles: ['admin', 'manager'] } },
   { path: "/order-statuses", component: OrderStatusesPage, meta: { requiresAuth: true, roles: ['admin', 'manager', 'bank'] } },
-  { path: "/agent-reports", component: AgentReportsPage, meta: { requiresAuth: true, roles: ['admin'] } },
 ];
 
 const router = createRouter({

@@ -274,11 +274,9 @@ export default {
       if (
         event &&
         (event.target.closest(".status-dropdown") ||
-          event.target.closest(".table-checkbox-cell") ||
-          event.target.closest(".action-buttons"))
-      ) {
+          event.target.closest(".table-checkbox-cell"))
+      )
         return;
-      }
       this.onRowClick?.(item);
     },
 

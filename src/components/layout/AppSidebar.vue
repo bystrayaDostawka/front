@@ -38,12 +38,6 @@
             Статусы
           </router-link>
         </li>
-        <li v-if="canSee('admin')">
-          <router-link to="/agent-reports">
-            <i class="fas fa-file-invoice mr-2"></i>
-            Акт-отчет агента
-          </router-link>
-        </li>
       </ul>
     </nav>
   </aside>
