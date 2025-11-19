@@ -2,27 +2,12 @@
     <div>
         <!-- Фильтры -->
         <div class="flex flex-col md:flex-row md:flex-wrap md:items-center gap-3 bg-white p-4 rounded-xl shadow mb-4">
-            <div class="relative w-full md:w-auto">
-                <input
-                    v-model="search"
-                    @keyup.enter="fetchItems"
-                    type="text"
-                    placeholder="Поиск (номер акта, банк)"
-                    class="border rounded-lg px-3 py-2 w-full md:w-96 focus:ring-2 focus:ring-blue-200"
-                />
-            </div>
             <div class="w-full md:w-auto">
                 <select v-model="filterStatus" @change="fetchItems" class="border rounded-lg px-3 py-2 w-full md:min-w-[140px]">
                     <option value="">Все статусы</option>
                     <option v-for="status in reportStatuses" :key="status.id" :value="status.id">
                         {{ status.title }}
                     </option>
-                </select>
-            </div>
-            <div v-if="user.role !== 'bank'" class="w-full md:w-auto">
-                <select v-model="filterBank" @change="fetchItems" class="border rounded-lg px-3 py-2 w-full md:min-w-[140px]">
-                    <option value="">Все банки</option>
-                    <option v-for="b in banks" :key="b.id" :value="b.id">{{ b.name }}</option>
                 </select>
             </div>
             <div class="w-full md:w-auto">
@@ -49,10 +34,15 @@
             </button>
         </div>
 
-        <div class="flex justify-between items-center mb-4">
-            <PrimaryButton :onclick="() => { showModal(null) }" icon="fas fa-plus">
-                Сформировать акт
-            </PrimaryButton>
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+            <div class="flex flex-col sm:flex-row gap-2">
+                <PrimaryButton :onclick="() => { showModal(null) }" icon="fas fa-plus">
+                    Сформировать акт
+                </PrimaryButton>
+            </div>
+            <div class="flex items-center gap-2">
+                <NotificationBell />
+            </div>
         </div>
 
         <transition name="fade" mode="out-in">
@@ -76,6 +66,8 @@
                 :editingItem="editingItem"
                 @saved="handleSaved"
                 @saved-error="handleSavedError"
+                @deleted="handleDeleted"
+                @deleted-error="handleDeletedError"
                 @notification="handleNotification"
             />
         </AppModal>
@@ -102,9 +94,9 @@ import NotificationToast from '@/components/NotificationToast.vue';
 import AlertDialog from '@/components/AlertDialog.vue';
 import AgentReportCreateModal from './AgentReportCreateModal.vue';
 import AgentReportsController from '@/api/AgentReportsController';
-import BanksController from '@/api/BanksController';
 import ModalTableMixin from '@/mixins/ModalTableMixin';
 import ReportStatusDropdown from '@/components/ReportStatusDropdown.vue';
+import NotificationBell from '@/components/NotificationBell.vue';
 import { markRaw } from 'vue';
 
 export default {
@@ -116,14 +108,12 @@ export default {
         AlertDialog,
         AgentReportCreateModal,
         ReportStatusDropdown,
+        NotificationBell,
     },
     mixins: [ModalTableMixin],
     data() {
         return {
             reports: [],
-            banks: [],
-            search: '',
-            filterBank: '',
             filterStatus: '',
             filterDateType: '',
             filterDate: '',
@@ -143,8 +133,8 @@ export default {
         },
         columnsConfig() {
             return [
+                { name: 'id', label: 'ID' },
                 { name: 'created_at', label: 'Дата формирования' },
-                { name: 'id', label: 'Номер акта' },
                 { name: 'delivery_cost', label: 'Сумма' },
                 {
                     name: 'status',
@@ -163,23 +153,13 @@ export default {
         },
     },
     created() {
-        this.fetchBanks();
         this.fetchItems();
     },
     methods: {
-        async fetchBanks() {
-            try {
-                this.banks = await BanksController.getItems();
-            } catch (error) {
-                console.error('Ошибка при загрузке банков:', error);
-            }
-        },
         async fetchItems() {
             this.loading = true;
             try {
                 const params = {};
-                if (this.search) params.search = this.search;
-                if (this.filterBank) params.bank_id = this.filterBank;
                 if (this.filterStatus) params.status = this.filterStatus;
 
                 if (this.filterDateType === 'range') {
@@ -209,9 +189,7 @@ export default {
             }
         },
         resetFilters() {
-            this.filterBank = '';
             this.filterStatus = '';
-            this.search = '';
             this.filterDateType = '';
             this.filterDate = '';
             this.filterDateFrom = '';
@@ -271,7 +249,7 @@ export default {
                 case 'created_at':
                     return this.formatDate(report.created_at);
                 case 'id':
-                    return `Акт-${report.id}`;
+                    return report.id;
                 case 'delivery_cost':
                     return this.formatCurrency(report.delivery_cost);
                 case 'actions':

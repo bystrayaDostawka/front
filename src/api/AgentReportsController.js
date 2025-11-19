@@ -85,11 +85,11 @@ export default class AgentReportsController {
     }
   }
 
-  static async getOrdersForPeriod(bankId, periodFrom, periodTo) {
+  static async getOrdersForPeriod(bankIds, periodFrom, periodTo) {
     try {
       const response = await api.get("/agent-reports/orders-for-period", {
         params: {
-          bank_id: bankId,
+          bank_ids: bankIds,
           period_from: periodFrom,
           period_to: periodTo,
         },

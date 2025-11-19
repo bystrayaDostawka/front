@@ -1,27 +1,38 @@
 <template>
     <div class="flex flex-col h-full overflow-hidden">
-        <div class="tabs mb-4">
-            <button
-                :class="['tab', { active: activeTab === 'form' }]"
-                @click="activeTab = 'form'"
-            >Форма</button>
-        </div>
-        <div v-if="activeTab === 'form'" class="flex-1 overflow-auto p-4">
+        <div class="p-4 border-b">
             <h2 class="text-lg font-bold mb-4">
                 {{ editingItem ? 'Редактировать акт-отчет' : 'Сформировать акт-отчет' }}
             </h2>
+            <div class="tabs">
+                <button
+                    :class="['tab', { active: activeTab === 'form' }]"
+                    @click="activeTab = 'form'"
+                >
+                    Форма
+                </button>
+            </div>
+        </div>
+        <div v-if="activeTab === 'form'" class="flex-1 overflow-auto p-4">
             <div class="space-y-4">
-                <!-- Банк -->
+                <!-- Банки -->
                 <div>
-                    <label class="required">Банк</label>
-                    <select
-                        v-model="formData.bank_id"
-                        :disabled="editingItem"
-                        required
-                    >
-                        <option value="" disabled>Выберите банк...</option>
-                        <option v-for="b in banks" :key="b.id" :value="b.id">{{ b.name }}</option>
-                    </select>
+                    <label class="required">Банки</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                        <label
+                            v-for="b in banks"
+                            :key="b.id"
+                            class="flex items-center gap-2 px-3 py-2 border rounded-lg bg-white shadow-sm hover:border-blue-300 transition"
+                        >
+                            <input
+                                type="checkbox"
+                                :value="b.id"
+                                v-model="formData.bank_ids"
+                                class="cursor-pointer accent-blue-600"
+                            />
+                            <span class="text-sm text-gray-700">{{ b.name }}</span>
+                        </label>
+                    </div>
                 </div>
 
                 <!-- Период -->
@@ -30,7 +41,6 @@
                         <label class="required">Период с</label>
                         <input
                             v-model="formData.period_from"
-                            :disabled="editingItem"
                             type="date"
                             required
                         />
@@ -39,7 +49,6 @@
                         <label class="required">Период по</label>
                         <input
                             v-model="formData.period_to"
-                            :disabled="editingItem"
                             type="date"
                             required
                         />
@@ -47,7 +56,7 @@
                 </div>
 
                 <!-- Кнопка загрузки заказов -->
-                <div v-if="!editingItem">
+                <div>
                     <PrimaryButton
                         :onclick="loadOrders"
                         :disabled="!canLoadOrders || loadingOrders"
@@ -91,6 +100,7 @@
                                     </th>
                                     <th class="px-3 py-2 text-left border-b">№</th>
                                     <th class="px-3 py-2 text-left border-b">Номер заказа</th>
+                                    <th class="px-3 py-2 text-left border-b">Банк</th>
                                     <th class="px-3 py-2 text-left border-b">Продукт</th>
                                     <th class="px-3 py-2 text-left border-b">Клиент</th>
                                     <th class="px-3 py-2 text-left border-b">Адрес</th>
@@ -115,6 +125,7 @@
                                     </td>
                                     <td class="px-3 py-2 border-b">{{ index + 1 }}</td>
                                     <td class="px-3 py-2 border-b">{{ order.order_number }}</td>
+                                    <td class="px-3 py-2 border-b">{{ order.bank_name || '-' }}</td>
                                     <td class="px-3 py-2 border-b">{{ order.product }}</td>
                                     <td class="px-3 py-2 border-b">
                                         {{ order.surname }} {{ order.name }} {{ order.patronymic }}
@@ -169,6 +180,15 @@
         </div>
         <div class="mt-4 flex space-x-2 bg-[#edf4fb] p-4 rounded-xl">
             <PrimaryButton
+                v-if="editingItem"
+                icon="fas fa-remove"
+                :onclick="showDeleteDialog"
+                :is-danger="true"
+                :is-loading="deleteLoading"
+            >
+                Удалить
+            </PrimaryButton>
+            <PrimaryButton
                 icon="fas fa-save"
                 :onclick="save"
                 :is-loading="saveLoading"
@@ -176,6 +196,14 @@
                 {{ editingItem ? 'Сохранить' : 'Сформировать акт' }}
             </PrimaryButton>
         </div>
+        <AlertDialog
+            :dialog="deleteDialog"
+            @confirm="deleteItem"
+            @leave="closeDeleteDialog"
+            descr="Подтвердите удаление акта-отчета"
+            confirm-text="Удалить"
+            leave-text="Отмена"
+        />
     </div>
 </template>
 
@@ -184,23 +212,30 @@ import AgentReportsController from '@/api/AgentReportsController';
 import BanksController from '@/api/BanksController';
 import FormModalMixin from '@/mixins/FormModalMixin';
 import PrimaryButton from '@/components/PrimaryButton.vue';
+import AlertDialog from '@/components/AlertDialog.vue';
 
 export default {
     name: 'AgentReportCreateModal',
     components: {
         PrimaryButton,
+        AlertDialog,
     },
     mixins: [FormModalMixin],
     data() {
+        const today = new Date();
+        const formatDate = (date) => date.toISOString().split('T')[0];
+        const defaultPeriodFrom = formatDate(new Date(today.getFullYear(), today.getMonth(), 1));
+        const defaultPeriodTo = formatDate(new Date(today.getFullYear(), today.getMonth() + 1, 0));
+
         return {
             banks: [],
             orders: [],
             loadingOrders: false,
             activeTab: 'form',
             formData: {
-                bank_id: '',
-                period_from: '',
-                period_to: '',
+                bank_ids: [],
+                period_from: defaultPeriodFrom,
+                period_to: defaultPeriodTo,
                 notes: '',
                 status: 'formed',
             },
@@ -208,10 +243,10 @@ export default {
     },
     computed: {
         canLoadOrders() {
-            return this.formData.bank_id && this.formData.period_from && this.formData.period_to;
+            return this.formData.bank_ids.length > 0 && this.formData.period_from && this.formData.period_to;
         },
         canSave() {
-            return this.selectedOrdersCount > 0 && this.totalCost > 0;
+            return this.formData.bank_ids.length > 0 && this.selectedOrdersCount > 0 && this.totalCost > 0;
         },
         totalCost() {
             return this.orders
@@ -232,6 +267,7 @@ export default {
         async fetchBanks() {
             try {
                 this.banks = await BanksController.getItems();
+                this.applyDefaultBanksIfNeeded();
             } catch (error) {
                 console.error('Ошибка при загрузке банков:', error);
             }
@@ -242,7 +278,7 @@ export default {
             this.loadingOrders = true;
             try {
                 const orders = await AgentReportsController.getOrdersForPeriod(
-                    this.formData.bank_id,
+                    this.formData.bank_ids,
                     this.formData.period_from,
                     this.formData.period_to
                 );
@@ -255,6 +291,7 @@ export default {
                 
                 this.orders = orders.map(order => ({
                     id: order.id,
+                    bank_name: order.bank_name || '',
                     order_number: order.order_number,
                     product: order.product,
                     name: order.name,
@@ -265,7 +302,7 @@ export default {
                     delivery_at: order.delivery_at,
                     delivered_at: order.delivered_at,
                     courier: order.courier,
-                    delivery_cost: parseFloat(order.delivery_cost) || 0,
+                    delivery_cost: this.getAutoDeliveryCost(order.address),
                     selected: false, // По умолчанию заявки не выбраны
                 }));
             } catch (error) {
@@ -276,6 +313,14 @@ export default {
             } finally {
                 this.loadingOrders = false;
             }
+        },
+        getAutoDeliveryCost(address) {
+            if (!address) {
+                return 700;
+            }
+
+            const normalizedAddress = String(address).toLowerCase();
+            return normalizedAddress.includes('москва') ? 650 : 700;
         },
         async setFormFromItem(item) {
             if (!item) {
@@ -295,7 +340,9 @@ export default {
             }
 
             // Заполняем форму данными
-            this.formData.bank_id = fullItem.bank_id || '';
+            this.formData.bank_ids = Array.isArray(fullItem.banks)
+                ? fullItem.banks.map(b => b.id)
+                : [];
             this.formData.notes = fullItem.notes || '';
             this.formData.status = fullItem.status || 'formed';
 
@@ -318,6 +365,7 @@ export default {
             if (fullItem.report_orders && fullItem.report_orders.length > 0) {
                 this.orders = fullItem.report_orders.map(ro => ({
                     id: ro.order?.id || ro.order_id,
+                    bank_name: ro.order?.bank?.name || '',
                     order_number: ro.order?.order_number || '',
                     product: ro.order?.product || '',
                     name: ro.order?.name || '',
@@ -335,6 +383,7 @@ export default {
                 // Альтернативная структура данных
                 this.orders = fullItem.orders.map(order => ({
                     id: order.id,
+                    bank_name: order.bank?.name || '',
                     order_number: order.order_number || '',
                     product: order.product || '',
                     name: order.name || '',
@@ -353,16 +402,16 @@ export default {
             }
         },
         clearForm() {
-            this.formData.bank_id = '';
-            this.formData.period_from = '';
-            this.formData.period_to = '';
+            this.formData.bank_ids = [];
+            this.resetPeriodToCurrentMonth();
+            this.applyDefaultBanksIfNeeded();
             this.formData.notes = '';
             this.formData.status = 'formed';
             this.orders = [];
         },
         _getFormState() {
             return {
-                bank_id: this.formData.bank_id,
+                bank_ids: this.formData.bank_ids,
                 period_from: this.formData.period_from,
                 period_to: this.formData.period_to,
                 notes: this.formData.notes,
@@ -382,7 +431,7 @@ export default {
                 const selectedOrders = this.orders.filter(order => order.selected);
                 
                 const data = {
-                    bank_id: this.formData.bank_id,
+                    bank_ids: this.formData.bank_ids,
                     period_from: this.formData.period_from,
                     period_to: this.formData.period_to,
                     delivery_cost: this.totalCost,
@@ -435,6 +484,31 @@ export default {
                 maximumFractionDigits: 2,
             }).format(amount);
         },
+        async _deleteItemApi(id) {
+            return AgentReportsController.delete(id);
+        },
+        getCurrentMonthRange() {
+            const today = new Date();
+            const start = new Date(today.getFullYear(), today.getMonth(), 1);
+            const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            const formatDate = (date) => date.toISOString().split('T')[0];
+            return {
+                from: formatDate(start),
+                to: formatDate(end),
+            };
+        },
+        resetPeriodToCurrentMonth() {
+            const { from, to } = this.getCurrentMonthRange();
+            this.formData.period_from = from;
+            this.formData.period_to = to;
+        },
+        applyDefaultBanksIfNeeded() {
+            if (!this.banks.length) return;
+            if (this.editingItem) return;
+            if (!this.formData.bank_ids.length) {
+                this.formData.bank_ids = this.banks.map((b) => b.id);
+            }
+        },
     },
 };
 </script>
@@ -446,20 +520,46 @@ export default {
 }
 .tabs {
     display: flex;
-    gap: 8px;
-    padding: 0 16px;
+    gap: 2px;
+    background: #f1f5f9;
+    padding: 2px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
 }
 .tab {
-    padding: 6px 16px;
+    padding: 6px 12px;
     border: none;
-    background: #f3f4f6;
+    background: transparent;
     cursor: pointer;
-    border-radius: 6px 6px 0 0;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 13px;
+    color: #64748b;
+    transition: all 0.2s ease;
+    position: relative;
+    white-space: nowrap;
+}
+.tab:hover {
+    background: #e2e8f0;
+    color: #475569;
 }
 .tab.active {
-    background: #fff;
-    border-bottom: 2px solid #3b82f6;
-    font-weight: bold;
+    background: #3b82f6;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);
+}
+.tab.active:hover {
+    background: #2563eb;
+}
+.tab:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: transparent;
+}
+.tab:disabled:hover {
+    background: transparent;
+    color: #64748b;
 }
 </style>
 
